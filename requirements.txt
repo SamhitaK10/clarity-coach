@@ -1,0 +1,28 @@
+# Clarity Coach - Complete Requirements
+# All dependencies with compatible versions
+
+# Core Framework
+fastapi==0.115.0
+uvicorn[standard]==0.31.0
+python-multipart==0.0.9
+
+# Data Validation
+pydantic==2.9.0
+pydantic-settings==2.5.0
+
+# Video Processing (for local testing)
+opencv-python==4.10.0.84
+mediapipe==0.10.18
+numpy==1.26.4
+
+# Modal Integration
+modal==0.64.0
+
+# LLM APIs
+openai==1.51.0
+anthropic==0.39.0
+
+# Utilities
+python-dotenv==1.0.1
+aiofiles==24.1.0
+httpx==0.27.0

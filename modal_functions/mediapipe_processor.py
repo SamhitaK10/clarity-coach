@@ -59,6 +59,8 @@ def process_video(video_bytes: bytes) -> Dict:
             static_image_mode=False,
             model_complexity=1,  # Balance between accuracy and speed
             smooth_landmarks=True,
+            enable_segmentation=False,
+            refine_face_landmarks=True,  # Enable iris tracking for eye contact!
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )

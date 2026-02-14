@@ -47,9 +47,10 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# Videos (temporary uploads)
+# Videos (temporary uploads and test videos)
 *.mp4
 *.avi
 *.mov
 *.webm
 uploads/
+videos/

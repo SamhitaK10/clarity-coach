@@ -5,22 +5,19 @@ Follow these steps in order to get Clarity Coach running.
 ## Prerequisites
 
 - [ ] Python 3.9 or higher installed
-- [ ] Internet connection
+- [ ] Internet connection for downloading dependencies
 
 ## Step-by-Step Setup
 
-### 1. Modal Setup (Cloud GPU Platform)
+### 1. Install Dependencies
 
 ```bash
-# Install Modal CLI
-pip install modal
-
-# Authenticate with Modal (opens browser)
-modal token new
+# Install all requirements (MediaPipe, OpenCV, FastAPI, etc.)
+pip install -r requirements.txt
 ```
 
-✅ **What this does**: Creates and stores Modal credentials in `~/.modal.toml`
-⚠️ **Important**: You do NOT need to add Modal credentials to `.env`
+✅ **What this installs**: MediaPipe, OpenCV, FastAPI, OpenAI SDK, and all dependencies
+⏱️ **Time**: ~2-3 minutes
 
 ---
 
@@ -36,47 +33,32 @@ modal token new
 
 ### 3. Configure Environment
 
-- [ ] Open `.env` file in project root
-- [ ] Replace `sk-proj-YOUR_OPENAI_KEY_HERE` with your actual key
+- [ ] Create `.env` file in project root
+- [ ] Add your OpenAI API key
 - [ ] Save the file
 
-Your `.env` should look like:
+Create `.env` with:
 ```env
-OPENAI_API_KEY=sk-proj-abc123xyz...
+OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY_HERE
 LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o-mini
 ```
 
 ---
 
-### 4. Install Dependencies
+### 4. Test Locally (Optional but Recommended)
 
 ```bash
-# Install backend dependencies
-pip install -r backend/requirements.txt
+# Add a test video to videos/ folder
+python test_video_local.py
 ```
+
+✅ **What this does**: Validates MediaPipe is detecting face, pose, and hands correctly
+⏱️ **Time**: ~20-30 seconds
 
 ---
 
-### 5. Deploy Modal Function
-
-```bash
-# Deploy the video processing function to Modal's GPU cloud
-modal deploy modal_functions/mediapipe_processor.py
-```
-
-⏳ This takes ~30 seconds. Wait for "Deployed!" message.
-
-Verify deployment:
-```bash
-modal app list
-```
-
-You should see `clarity-coach-mediapipe` in the list.
-
----
-
-### 6. Start Backend Server
+### 5. Start Backend Server
 
 ```bash
 # From project root
@@ -108,13 +90,13 @@ INFO:     Application startup complete.
 Check if everything is configured correctly:
 
 ```bash
-# 1. Check Modal authentication
-modal token list
-# ✅ Should show your token
+# 1. Test local video processing
+python test_video_local.py
+# ✅ Should process video and show scores
 
-# 2. Check Modal deployment
-modal app list
-# ✅ Should show "clarity-coach-mediapipe"
+# 2. Debug landmark detection
+python debug_landmarks.py
+# ✅ Should show face/pose/hand detection stats
 
 # 3. Check .env is loaded
 python -c "from backend.app.config import settings; print('OpenAI key configured:', bool(settings.openai_api_key))"
@@ -129,12 +111,21 @@ curl http://localhost:8000/health
 
 ## Common Issues
 
-### ❌ "Modal function not found"
+### ❌ "Eye contact score always 0"
+
+**Solution**:
+- Run `python debug_landmarks.py` to check iris detection
+- Code should have `refine_face_landmarks=True` (already set)
+- If iris landmarks show 0%, MediaPipe might need reinstall:
+  ```bash
+  pip install --force-reinstall mediapipe==0.10.18
+  ```
+
+### ❌ "NumPy version conflict"
 
 **Solution**:
 ```bash
-modal token new  # Re-authenticate
-modal deploy modal_functions/mediapipe_processor.py  # Re-deploy
+pip install "numpy<2"  # MediaPipe needs NumPy 1.x
 ```
 
 ---
@@ -169,9 +160,10 @@ pip install -r backend/requirements.txt
 
 ## What NOT to Do
 
-❌ Don't try to add Modal credentials to `.env` - they're managed by Modal CLI
-❌ Don't skip the `modal deploy` step - the backend needs this function
+❌ Don't skip testing locally first - validates your setup works
+❌ Don't use NumPy 2.x - MediaPipe requires NumPy 1.x
 ❌ Don't forget to save your OpenAI API key after pasting it into `.env`
+❌ Don't commit `.env` to git - it's already in .gitignore
 
 ---
 

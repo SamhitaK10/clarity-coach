@@ -8,7 +8,8 @@ import io
 import numpy as np
 
 from ..models.schemas import AnalysisResponse, ErrorResponse, VideoMetrics, RawFeatures
-from ..services.modal_client import modal_client
+# Use local processing (no Modal required)
+from ..services.modal_client_local import modal_client
 from ..services.llm_client import llm_client
 from ..config import settings
 

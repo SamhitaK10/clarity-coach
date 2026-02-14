@@ -1,29 +1,23 @@
 # Quick Start Guide
 
-Get Clarity Coach running in 5 minutes.
+Get Clarity Coach running in 3 minutes.
 
 ## Prerequisites
 
 - Python 3.9+
-- Modal account (sign up at [modal.com](https://modal.com))
 - OpenAI API key (get one at [platform.openai.com](https://platform.openai.com))
 
 ## Steps
 
-### 1. Install Modal
+### 1. Install Dependencies
 
 ```bash
-pip install modal
-modal token new
+pip install -r requirements.txt
 ```
 
-### 2. Install Dependencies
+This installs MediaPipe, OpenCV, FastAPI, and all dependencies.
 
-```bash
-pip install -r backend/requirements.txt
-```
-
-### 3. Configure Environment
+### 2. Configure Environment
 
 Create `.env` file in project root:
 
@@ -36,24 +30,24 @@ LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o-mini
 ```
 
-**Note**: Modal authentication was already handled in Step 1 with `modal token new`. You do NOT need Modal credentials in `.env`.
+### 3. Test Locally (Optional)
 
-### 4. Deploy Modal Function
+Add a test video to `videos/` folder and run:
 
 ```bash
-modal deploy modal_functions/mediapipe_processor.py
+python test_video_local.py
 ```
 
-Wait for deployment to complete (~30 seconds).
+This validates MediaPipe is working.
 
-### 5. Start Backend
+### 4. Start Backend
 
 ```bash
 cd backend
 uvicorn app.main:app --reload
 ```
 
-### 6. Open Browser
+### 5. Open Browser
 
 Navigate to: http://localhost:8000
 
@@ -66,16 +60,10 @@ Navigate to: http://localhost:8000
 
 ## Troubleshooting
 
-**"Modal function not found"**
-```bash
-# First, ensure you're authenticated
-modal token new
-
-# Then deploy
-modal deploy modal_functions/mediapipe_processor.py
-```
-
-**Important**: Modal credentials are NOT in `.env`! They're stored automatically in `~/.modal.toml` after running `modal token new`.
+**"Eye contact score always 0"**
+- MediaPipe needs `refine_face_landmarks=True` for iris tracking
+- This is already set in the code, so it should work
+- Run `python debug_landmarks.py` to verify iris detection
 
 **"Invalid API key"**
 - Check your `.env` file has the correct `OPENAI_API_KEY`
@@ -84,8 +72,17 @@ modal deploy modal_functions/mediapipe_processor.py
 
 **"Module not found"**
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 ```
+
+**"NumPy version conflict"**
+```bash
+pip install "numpy<2"
+```
+
+**Slow processing**
+- Local CPU processing takes 30-60 seconds per video
+- This is normal! GPU would be faster but requires Modal setup
 
 ## Next Steps
 

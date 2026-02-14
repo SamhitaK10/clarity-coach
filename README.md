@@ -7,11 +7,12 @@ AI-powered workplace communication assistant that analyzes short video presentat
 Clarity Coach helps professionals improve their workplace communication by analyzing 30-60 second videos and providing concrete, actionable coaching on nonverbal communication patterns.
 
 **Key Features:**
-- 🎥 Automated video analysis using MediaPipe Holistic
+- 🎥 Automated video analysis using MediaPipe Holistic with iris tracking
 - 📊 Three key metrics: Eye Contact, Posture, and Gestures (0-100 scores)
 - 🤖 AI-powered coaching feedback using OpenAI GPT-4o-mini
-- ⚡ Fast processing (15-40 seconds for typical videos)
+- ⚡ Local CPU processing (30-60 seconds) or optional Modal GPU (faster)
 - 🌐 Clean web interface for easy use
+- 🔧 Test scripts for debugging and validation
 
 ## Architecture
 
@@ -27,23 +28,27 @@ Clarity Coach helps professionals improve their workplace communication by analy
 │   Backend   │
 └──────┬──────┘
        │
-       ├─────► Modal (GPU) ──► MediaPipe Holistic ──► Metrics
+       ├─────► Local MediaPipe ──► Holistic + Iris ──► Metrics
+       │        (CPU, runs anywhere)
        │
-       └─────► OpenAI/Anthropic ──► Coaching Feedback
+       └─────► OpenAI GPT-4o-mini ──► Coaching Feedback
 ```
+
+**Optional Modal GPU acceleration available** for faster processing in `modal_functions/`.
 
 ### Components
 
 1. **Frontend** (`frontend/`): Simple HTML/CSS/JS interface for video upload and results
-2. **Backend** (`backend/app/`): FastAPI server handling video uploads and orchestration
-3. **Modal Function** (`modal_functions/`): GPU-accelerated MediaPipe processing
-4. **LLM Integration**: OpenAI GPT-4o-mini for generating coaching feedback
+2. **Backend** (`backend/app/`): FastAPI server with local MediaPipe processing
+3. **LLM Integration**: OpenAI GPT-4o-mini for generating coaching feedback
+4. **Test Scripts**: Local testing and debugging tools
+5. **Modal Functions** (optional): GPU-accelerated processing for production
 
 ## Prerequisites
 
 - **Python 3.9+**
-- **Modal account** (free tier available): [modal.com](https://modal.com)
 - **OpenAI API key**: [platform.openai.com](https://platform.openai.com)
+- **Optional**: Modal account for GPU acceleration: [modal.com](https://modal.com)
 
 ## Installation
 
@@ -54,33 +59,26 @@ git clone https://github.com/yourusername/clarity-coach.git
 cd clarity-coach
 ```
 
-### 2. Set Up Modal
+### 2. Install Dependencies
 
-Install Modal CLI and authenticate:
-
-```bash
-pip install modal
-modal token new
-```
-
-Follow the prompts to authenticate with your Modal account.
-
-### 3. Install Backend Dependencies
+Install all required dependencies (includes MediaPipe, OpenCV, FastAPI):
 
 ```bash
-cd backend
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### 3. Configure Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root with your OpenAI API key:
 
 ```bash
-cp .env.example .env
+# Create .env file
+echo "OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY_HERE" > .env
+echo "LLM_PROVIDER=openai" >> .env
+echo "LLM_MODEL=gpt-4o-mini" >> .env
 ```
 
-Edit `.env` with your OpenAI API key:
+Or manually create `.env`:
 
 ```env
 # OpenAI API (REQUIRED)
@@ -98,17 +96,16 @@ MAX_VIDEO_SIZE_MB=50
 MAX_VIDEO_DURATION_SECONDS=90
 ```
 
-**Note**: Modal authentication is handled via `modal token new` (step 2). You do NOT need Modal credentials in your `.env` file.
+### 4. Test Locally (Optional but Recommended)
 
-### 5. Deploy Modal Function
-
-Deploy the MediaPipe processing function to Modal:
+Test video processing with a sample video:
 
 ```bash
-modal deploy modal_functions/mediapipe_processor.py
+# Add a test video to videos/ folder
+python test_video_local.py
 ```
 
-This will deploy the GPU function to Modal's infrastructure.
+This validates MediaPipe is working correctly.
 
 ## Usage
 
@@ -118,6 +115,8 @@ This will deploy the GPU function to Modal's infrastructure.
 cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+The server will start with auto-reload enabled (changes to code auto-refresh).
 
 ### Access the Web Interface
 
@@ -130,9 +129,23 @@ http://localhost:8000
 ### Using the Application
 
 1. **Upload Video**: Click the upload area or drag & drop a video file (MP4, AVI, MOV, WEBM)
-2. **Analyze**: Click "Analyze Video" and wait 15-40 seconds
+2. **Analyze**: Click "Analyze Video" and wait 30-60 seconds (local CPU processing)
 3. **Review Results**: View your metrics and AI coaching feedback
 4. **Iterate**: Upload another video to track improvement
+
+### Testing & Debugging
+
+**Test local processing:**
+```bash
+python test_video_local.py
+```
+
+**Debug landmark detection:**
+```bash
+python debug_landmarks.py
+```
+
+These scripts help validate MediaPipe is detecting face, pose, and hands correctly.
 
 ### API Usage
 
@@ -163,28 +176,30 @@ curl -X POST http://localhost:8000/analyze \
 clarity-coach/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py              # FastAPI entry point
-│   │   ├── config.py            # Configuration management
+│   │   ├── main.py                      # FastAPI entry point
+│   │   ├── config.py                    # Configuration management
 │   │   ├── routes/
-│   │   │   └── analyze.py       # /analyze endpoint
+│   │   │   └── analyze.py               # /analyze endpoint
 │   │   ├── services/
-│   │   │   ├── modal_client.py  # Modal function client
-│   │   │   └── llm_client.py    # OpenAI/Anthropic client
+│   │   │   ├── modal_client_local.py    # Local MediaPipe processing
+│   │   │   ├── modal_client.py          # Modal GPU client (optional)
+│   │   │   └── llm_client.py            # OpenAI/Anthropic client
 │   │   └── models/
-│   │       └── schemas.py       # Pydantic models
-│   ├── requirements.txt
+│   │       └── schemas.py               # Pydantic models
 │   └── tests/
 ├── modal_functions/
-│   ├── mediapipe_processor.py   # Modal GPU function
-│   ├── utils.py                 # Metric calculations
+│   ├── mediapipe_processor.py           # Modal GPU function (optional)
+│   ├── utils.py                         # Metric calculations
 │   └── requirements.txt
 ├── frontend/
-│   ├── index.html               # Web interface
-│   ├── style.css                # Styling
-│   └── app.js                   # Frontend logic
-├── .env.example
+│   ├── index.html                       # Web interface
+│   ├── style.css                        # Styling
+│   └── app.js                           # Frontend logic
+├── test_video_local.py                  # Local video testing script
+├── debug_landmarks.py                   # Landmark detection debugger
+├── requirements.txt                     # Unified dependencies
 ├── .gitignore
-├── CLAUDE.md                    # Project instructions for Claude Code
+├── CLAUDE.md                            # Project instructions
 └── README.md
 ```
 
@@ -192,12 +207,15 @@ clarity-coach/
 
 ### Eye Contact Score (0-100)
 
-Measures the percentage of frames where the speaker appears to be looking at the camera. Uses MediaPipe iris landmarks to estimate gaze direction.
+Measures the percentage of frames where the speaker appears to be looking at the camera. Uses MediaPipe iris landmarks (indices 468-477) to estimate gaze direction.
+
+**Technical Note**: Requires `refine_face_landmarks=True` in MediaPipe Holistic to enable iris tracking (478 landmarks instead of 468).
 
 - **90-100**: Excellent, consistent eye contact
 - **70-89**: Good eye contact with occasional breaks
 - **40-69**: Moderate, could be improved
 - **0-39**: Limited eye contact, needs attention
+- **0**: No face detected or iris tracking disabled
 
 ### Posture Score (0-100)
 
@@ -210,12 +228,13 @@ Evaluates upright posture based on shoulder-to-hip distance (torso length). Long
 
 ### Gesture Score (0-100)
 
-Measures hand movement activity. Moderate gesturing scores highest, as both too little and too much can be distracting.
+Measures hand movement activity by tracking wrist displacement between frames. Moderate gesturing scores highest, as both too little and too much can be distracting.
 
 - **90-100**: Optimal natural gesturing
 - **70-89**: Good gesture activity
 - **40-69**: Either too few or too many gestures
 - **0-39**: Very limited or excessive gesturing
+- **0**: No hands detected in video (hands out of frame)
 
 ## Testing the Modal Function
 
