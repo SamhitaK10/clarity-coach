@@ -1,9 +1,21 @@
 """
 Client for calling Modal functions.
 """
-import modal
-from typing import Dict, Optional
-import os
+from typing import Dict
+import sys
+from pathlib import Path
+
+# Add modal_functions to Python path to import the Modal app
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root / "modal_functions"))
+
+# Import the Modal app and function directly
+try:
+    from mediapipe_processor import app, process_video
+except ImportError as e:
+    raise ImportError(
+        f"Failed to import Modal function. Make sure modal_functions/ is accessible. Error: {e}"
+    )
 
 
 class ModalClient:
@@ -11,8 +23,8 @@ class ModalClient:
 
     def __init__(self):
         """Initialize Modal client."""
-        # Modal authentication is handled via environment variables or token file
-        # MODAL_TOKEN_ID and MODAL_TOKEN_SECRET
+        # Modal authentication is handled via CLI (modal token new)
+        # No additional setup needed
         pass
 
     async def process_video(self, video_bytes: bytes) -> Dict:
@@ -29,18 +41,15 @@ class ModalClient:
             Exception: If Modal function call fails
         """
         try:
-            # Look up the deployed Modal function
-            # The function is deployed as part of the "clarity-coach-mediapipe" app
-            process_fn = modal.Function.lookup("clarity-coach-mediapipe", "process_video")
-
-            # Call the remote function
-            result = process_fn.remote(video_bytes)
+            # Call the Modal function directly using .remote()
+            # This uses the deployed function on Modal's infrastructure
+            result = process_video.remote(video_bytes)
 
             return result
 
-        except modal.exception.NotFoundError:
+        except AttributeError:
             raise Exception(
-                "Modal function not found. Please deploy first with: "
+                "Modal function not deployed. Please deploy first with: "
                 "modal deploy modal_functions/mediapipe_processor.py"
             )
         except Exception as e:
