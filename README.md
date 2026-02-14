@@ -28,5 +28,4 @@ Dev mode with auto-reload: `npm run dev`
 - `OPENAI_API_KEY` – Whisper transcription
 - `ANTHROPIC_API_KEY` – Claude coaching
 - `ELEVENLABS_API_KEY` – Voice synthesis
-- `ELEVENLABS_VOICE_ID` – (optional) Voice ID; default is Rachel
 - `PORT` – Server port (default 3000)
