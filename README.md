@@ -29,6 +29,7 @@ An AI-powered interview coaching platform that records your practice sessions, p
 
 ### Prerequisites
 - Node.js 18+ installed
+- Python 3.9+ installed
 - Valid API keys for:
   - OpenAI (Whisper + GPT-4o)
   - Anthropic (Claude)
@@ -37,31 +38,61 @@ An AI-powered interview coaching platform that records your practice sessions, p
 ### Installation
 
 \`\`\`bash
-# 1. Install backend dependencies
+# 1. Install Node.js dependencies
 npm install
-
-# 2. Install frontend dependencies
 cd frontend
 npm install
 cd ..
 
-# 3. Add your API keys to .env file
-# (Already has keys - regenerate for security!)
+# 2. Install Python dependencies
+cd ../clarity-coach-cv/clarity-coach-cv/backend-python
+pip install -r requirements.txt
+cd ../../../clarity-coach-frontend/clarity-coach-frontend
+
+# 3. API keys already configured in .env files
+# ⚠️ REGENERATE KEYS FOR SECURITY - they are exposed!
 \`\`\`
 
 ### Running the Application
 
-\`\`\`bash
-# Build frontend
-cd frontend
-npm run build
-cd ..
+#### Option 1: Automatic Startup (Recommended)
 
-# Start backend (serves built frontend)
+**Windows:**
+\`\`\`bash
+# Double-click or run:
+start-both-backends.bat
+\`\`\`
+
+**Mac/Linux:**
+\`\`\`bash
+chmod +x start-both-backends.sh
+./start-both-backends.sh
+\`\`\`
+
+#### Option 2: Manual Startup
+
+\`\`\`bash
+# Terminal 1: Python backend (MediaPipe video analysis)
+cd ../clarity-coach-cv/clarity-coach-cv/backend-python
+python run_server.py
+
+# Terminal 2: Node.js backend (serves frontend + audio processing)
+cd clarity-coach-frontend
 node server.js
 \`\`\`
 
 Open browser: **http://localhost:3000**
+
+---
+
+## 🎯 New Architecture
+
+The app now uses **TWO backends** for complete analysis:
+
+1. **Python Backend (Port 8000)**: Real body language analysis with MediaPipe
+2. **Node.js Backend (Port 3000)**: Audio transcription + AI coaching
+
+See **INTEGRATION_GUIDE.md** for detailed architecture and API documentation.
 
 ---
 
