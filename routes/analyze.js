@@ -2,15 +2,27 @@ const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const router = express.Router();
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthicropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const COACHING_SYSTEM = `You are an expert interview coach for non-native English speakers. Given a transcript of an interview practice session (or a candidate's answer), provide structured feedback in JSON format with these exact keys:
-- clarity: How clear was the answer? Point out unclear parts and suggest ways to express ideas more clearly.
-- grammar: List specific grammar errors (wrong tense, articles, prepositions, subject-verb agreement, etc.) with corrections.
-- phrasing: Suggest more natural, idiomatic phrasing for awkward or non-native-sounding expressions.
-- fillerWords: Identify filler words (um, uh, like, you know, actually, basically) and advise on reducing them for a more confident delivery.
-- exampleSentence: Provide exactly one improved example sentence that incorporates your best suggestions.
-Respond ONLY with valid JSON, no other text. Be constructive and specific.`;
+const COACHING_SYSTEM = `
+You are a supportive interview coach helping non-native English speakers improve clarity and confidence.
+
+Given an interview answer, respond ONLY with valid JSON using these keys:
+
+- clarity: Brief feedback on clarity and how to improve it.
+- grammar: Specific grammar corrections if needed.
+- phrasing: Suggest more natural or idiomatic phrasing.
+- fillerWords: Identify filler words and advise reducing them.
+- exampleSentence: ONE improved example sentence.
+- followUp: Ask ONE short supportive follow-up question to help the user improve their answer.
+- reply: A short, natural spoken coaching response (max 2 sentences) that sounds like a real coach speaking directly to the user.
+
+Guidelines:
+Keep tone supportive and human.
+Keep responses concise.
+End the reply with the follow-up question.
+Respond ONLY with JSON.
+`;
 
 router.post('/', express.json(), async (req, res, next) => {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -19,26 +31,27 @@ router.post('/', express.json(), async (req, res, next) => {
 
   const { transcript, question } = req.body;
   const text = transcript || req.body.text;
+
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Request body must include "transcript" or "text".' });
   }
 
   const userContent = question
-    ? `Question: ${question}\n\nTranscript/Answer:\n${text}`
-    : `Transcript/Answer:\n${text}`;
+    ? `Question: ${question}\n\nAnswer:\n${text}`
+    : `Answer:\n${text}`;
 
   try {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
+      max_tokens: 800,
       system: COACHING_SYSTEM,
       messages: [{ role: 'user', content: userContent }],
     });
 
     const block = message.content.find((b) => b.type === 'text');
-    const raw = block?.text ?? 'No feedback generated.';
+    const raw = block?.text ?? '';
 
-    let feedback;
+    let feedback = null;
     try {
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       feedback = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
@@ -46,17 +59,26 @@ router.post('/', express.json(), async (req, res, next) => {
       feedback = null;
     }
 
-    if (feedback && typeof feedback.clarity === 'string' && typeof feedback.exampleSentence === 'string') {
-      res.json({
-        clarity: feedback.clarity,
-        grammar: feedback.grammar ?? '',
-        phrasing: feedback.phrasing ?? '',
-        fillerWords: feedback.fillerWords ?? '',
-        exampleSentence: feedback.exampleSentence,
-      });
-    } else {
-      res.json({ coaching: raw });
+    if (!feedback) {
+      return res.json({ error: "Coaching generation failed." });
     }
+
+    // conversational voice reply (used by ElevenLabs)
+    const coachReply =
+      feedback.reply ||
+      `${feedback.exampleSentence} ${feedback.followUp}`;
+
+    res.json({
+      clarity: feedback.clarity ?? '',
+      grammar: feedback.grammar ?? '',
+      phrasing: feedback.phrasing ?? '',
+      fillerWords: feedback.fillerWords ?? '',
+      exampleSentence: feedback.exampleSentence ?? '',
+      followUp: feedback.followUp ?? 'Try answering again more concisely.',
+      reply: feedback.reply ?? '',
+      coachReply
+    });
+
   } catch (err) {
     next(err);
   }
