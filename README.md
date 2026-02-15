@@ -1,101 +1,92 @@
 ## 🎤 Interview Coaching API
 
-Express backend powering Clarity Coach’s audio interview training.
+Express-based backend powering the conversational audio coaching system for **Clarity Coach**, an AI-driven communication training platform.
 
-This service transcribes spoken answers, analyzes communication clarity, and generates spoken coaching feedback to help users improve confidence, delivery, and fluency.
-
----
-
-## 🎯 Overview
-
-The Interview Coaching API powers the audio coaching experience in Clarity Coach. It converts spoken responses into actionable communication feedback and delivers voice coaching to create a conversational practice loop.
-
-It evaluates clarity, phrasing, grammar, pacing, and filler words, then provides spoken coaching and follow up prompts to simulate real interview practice.
+This service captures spoken responses, performs speech transcription, evaluates communication clarity using large language models, and generates spoken coaching feedback to enable iterative, conversational practice.
 
 ---
 
-## 🎯 Purpose
+## 🎯 System Overview
 
-This service enables users to practice spoken responses and receive real time communication feedback to improve:
+The Interview Coaching API enables real-time interview practice by transforming spoken responses into structured communication insights and spoken coaching feedback.
 
-• clarity  
-• confidence  
-• fluency  
-• delivery  
-• interview performance  
+The system evaluates clarity, delivery, phrasing, pacing, and filler word usage, then produces actionable coaching guidance and follow-up prompts to simulate realistic interview dialogue.
+
+This service is designed for low-latency feedback loops and conversational continuity.
 
 ---
 
-## ⚙️ Processing Pipeline
+## 🧠 Design Goals
 
-Audio Input → Speech Transcription → AI Communication Analysis → Coaching Feedback → Voice Playback → Conversational Practice Loop
-
----
-
-## ✨ Core Features
-
-• 🎙️ speech to text transcription  
-• 💡 clarity and confidence coaching  
-• ✍️ grammar and phrasing improvements  
-• ⚠️ filler word detection  
-• 🧠 AI generated follow up questions  
-• 🗣️ voice coaching playback  
-• 🔁 conversational coaching loop  
-• 🎯 interview simulation practice  
+• enable realistic interview simulation  
+• provide actionable communication feedback  
+• support iterative practice through conversational loops  
+• maintain low-latency audio processing  
+• separate frontend capture from backend analysis  
+• support scalable AI-driven coaching workflows  
 
 ---
 
-## 🧠 How Conversational Coaching Works
+## ⚙️ End-to-End Processing Pipeline
 
-1. User records an answer in the browser  
-2. OpenAI Whisper transcribes the speech  
-3. Claude analyzes clarity, delivery, and phrasing  
-4. Coaching feedback is generated  
-5. ElevenLabs converts feedback into spoken audio  
-6. AI asks a follow up question  
-7. User responds and continues practice  
-
-This creates a natural interview simulation experience.
-
----
-
-## 🧰 Tech Stack
-
-### Backend
-Node.js  
-Express  
-
-### AI & Speech
-OpenAI Whisper API — speech transcription  
-Anthropic Claude API — communication analysis  
-ElevenLabs API — voice synthesis  
-
-### Realtime & Audio
-OpenAI Realtime API — low latency conversational sessions  
-WebRTC — real time audio streaming  
-MediaRecorder API — in browser audio capture  
-getUserMedia — microphone access  
-
-### Utilities
-Multer — audio uploads  
-dotenv — environment configuration  
-node-fetch — external API requests  
+Microphone Capture  
+→ Browser MediaRecorder stream  
+→ Multipart audio upload  
+→ OpenAI Whisper API transcription  
+→ Claude API communication analysis  
+→ structured coaching generation  
+→ ElevenLabs text-to-speech synthesis  
+→ audio playback to client  
+→ AI follow-up prompt generation  
+→ continued conversational loop  
 
 ---
 
-## 🏗 Role in Clarity Coach Architecture
+## ✨ Core Capabilities
 
-This service powers the audio coaching pipeline:
+### Speech Processing
+• browser-based audio capture  
+• multipart audio ingestion  
+• high-accuracy speech-to-text transcription  
 
-Microphone Input → Transcription → AI Analysis → Voice Coaching → Practice Loop
+### Communication Analysis
+• clarity evaluation  
+• grammar and phrasing refinement  
+• filler word detection and reduction strategies  
+• delivery and pacing feedback  
+• confidence and tone guidance  
 
-It integrates with the video coaching backend to deliver complete communication feedback.
+### Conversational Coaching
+• AI-generated follow-up questions  
+• iterative practice loop  
+• conversational response scaffolding  
+• interview simulation flow  
+
+### Voice Feedback
+• low-latency TTS synthesis  
+• natural spoken coaching delivery  
+• base64 audio streaming to client  
 
 ---
 
-## 🚀 Setup
+## 🧠 Conversational Coaching Loop
 
-### 1. Install Dependencies
+1. user records interview response  
+2. audio is captured via MediaRecorder  
+3. Whisper API transcribes speech  
+4. Claude API analyzes communication quality  
+5. coaching feedback is generated  
+6. ElevenLabs synthesizes spoken coaching  
+7. AI produces follow-up prompt  
+8. user responds and continues loop  
 
-```bash
-npm install
+This loop creates a dynamic interview simulation environment rather than static feedback.
+
+---
+
+## 🏗 Architecture Role
+
+This service powers the **audio coaching pipeline** within Clarity Coach.
+
+It integrates with the video analysis backend to provide full-spectrum communication feedback.
+
