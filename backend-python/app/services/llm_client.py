@@ -157,20 +157,20 @@ Format your response as clear bullet points."""
 
     async def generate_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None) -> str:
         """
-        Generate combined feedback for both nonverbal and verbal communication.
+        Generate conversational combined feedback for both nonverbal and verbal communication.
 
         Args:
             nonverbal_metrics: Dictionary with nonverbal scores
             verbal_feedback: Optional dictionary with verbal feedback
 
         Returns:
-            Combined coaching feedback
+            Natural, conversational coaching feedback with follow-up question
         """
         eye_contact = nonverbal_metrics.get('eye_contact_score', 0)
         posture = nonverbal_metrics.get('posture_score', 0)
         gesture = nonverbal_metrics.get('gesture_score', 0)
 
-        prompt = f"""You are a professional communication coach analyzing a workplace video presentation.
+        prompt = f"""You are a supportive communication coach helping someone improve their presentation skills.
 
 NONVERBAL COMMUNICATION:
 - Eye Contact: {eye_contact}/100 (camera engagement)
@@ -186,24 +186,30 @@ NONVERBAL COMMUNICATION:
 
             prompt += f"""
 VERBAL COMMUNICATION:
-- Transcript: "{transcript[:200]}{'...' if len(transcript) > 200 else ''}"
-- Clarity Assessment: {clarity}
+- What they said: "{transcript[:200]}{'...' if len(transcript) > 200 else ''}"
+- Clarity: {clarity}
 - Grammar: {grammar}
 - Filler Words: {filler_words}
 """
 
         prompt += """
-Provide a comprehensive coaching summary (5-7 bullet points) covering:
-1. Overall communication strengths
-2. Key areas for improvement (both nonverbal and verbal)
-3. Specific, actionable tips for immediate improvement
-4. One priority focus area for next practice session
+Write a natural, conversational coaching response that:
+1. Highlights 1-2 specific strengths with genuine encouragement
+2. Identifies the TOP priority area to improve (nonverbal OR verbal - pick the most impactful one)
+3. Gives ONE concrete, actionable tip they can try immediately
+4. Ends with a supportive follow-up question to help them practice
 
-Keep feedback:
-- Constructive and encouraging
-- Specific with examples
-- Actionable
-- Culturally aware"""
+Keep your response:
+- Conversational and warm (like you're talking to them in person)
+- Concise (4-6 sentences total)
+- Specific (mention their actual scores/behaviors)
+- Encouraging but honest
+- Natural sounding (use contractions, casual phrases)
+- End with a follow-up question
+
+Example tone: "Great eye contact! I can see you're really engaging with the camera. The main thing I'd focus on is adding more hand gestures - you're at 45/100 right now. Try using your hands to emphasize key points, like when you mention numbers or important concepts. What specific part of your message could you emphasize with a gesture next time?"
+
+Write your coaching response (no labels, just the natural text):"""
 
         try:
             if self.provider == "openai":
@@ -232,17 +238,35 @@ Keep feedback:
             return self._generate_fallback_combined_feedback(nonverbal_metrics, verbal_feedback)
 
     def _generate_fallback_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None) -> str:
-        """Fallback combined feedback if LLM fails."""
-        feedback_parts = [self._generate_fallback_feedback(nonverbal_metrics)]
+        """Fallback conversational feedback if LLM fails."""
+        eye_contact = nonverbal_metrics.get('eye_contact_score', 0)
+        posture = nonverbal_metrics.get('posture_score', 0)
+        gesture = nonverbal_metrics.get('gesture_score', 0)
+
+        # Find the strongest and weakest areas
+        scores = [
+            (eye_contact, "eye contact", "looking at the camera"),
+            (posture, "posture", "sitting/standing upright"),
+            (gesture, "hand gestures", "using hand movements")
+        ]
+        scores.sort(reverse=True, key=lambda x: x[0])
+        strongest = scores[0]
+        weakest = scores[-1]
+
+        # Build conversational feedback
+        feedback = f"Nice work on your {strongest[1]} - you scored {strongest[0]:.0f}/100! "
+
+        if weakest[0] < 60:
+            feedback += f"The main area to focus on is {weakest[1]}, where you're at {weakest[0]:.0f}/100. "
+            feedback += f"Try {weakest[2]} more consistently during your next practice. "
 
         if verbal_feedback:
-            feedback_parts.append("\n**VERBAL COMMUNICATION:**")
             if verbal_feedback.get('clarity'):
-                feedback_parts.append(f"• Clarity: {verbal_feedback['clarity']}")
-            if verbal_feedback.get('fillerWords'):
-                feedback_parts.append(f"• Filler Words: {verbal_feedback['fillerWords']}")
+                feedback += f"Verbally, {verbal_feedback['clarity']} "
 
-        return "\n".join(feedback_parts)
+        feedback += "What aspect would you like to work on first in your next recording?"
+
+        return feedback
 
 
 # Global client instance

@@ -138,9 +138,9 @@ async def analyze_complete(file: UploadFile = File(...)):
     # Step 5: Generate voice coaching (optional - graceful degradation if fails)
     voice_audio = None
     try:
-        # Create a concise spoken version of the coaching feedback
-        # Take first 2-3 sentences for voice synthesis (keep it brief)
-        spoken_text = ". ".join(combined_feedback.split(". ")[:3]) + "."
+        # Use the full conversational feedback for voice synthesis
+        # (It's now naturally concise and conversational - 4-6 sentences)
+        spoken_text = combined_feedback
 
         voice_url = "http://localhost:3000/api/voice-feedback"
         async with httpx.AsyncClient(timeout=30.0) as client:

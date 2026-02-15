@@ -158,8 +158,13 @@ function displayResults(data) {
         }
     }
 
-    // Combined coaching feedback
-    document.getElementById('combined-feedback').textContent = data.combined_feedback;
+    // Combined coaching feedback (conversational)
+    const feedbackElement = document.getElementById('combined-feedback');
+    // Use innerHTML to preserve any formatting, but escape to prevent XSS
+    feedbackElement.textContent = data.combined_feedback;
+    // Add some visual formatting to the text
+    feedbackElement.style.whiteSpace = 'pre-wrap';
+    feedbackElement.style.lineHeight = '1.8';
 
     // Voice coaching (if available)
     const voiceSection = document.getElementById('voice-section');
