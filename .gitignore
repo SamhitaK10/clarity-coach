@@ -1,3 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node.js
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Environment variables
 .env
+*.env
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Modal
+.modal/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Videos (temporary uploads and test videos)
+*.mp4
+*.avi
+*.mov
+*.webm
 uploads/
+videos/
+
+# Old/legacy directories (removed during cleanup)
+backend/
+frontend-video/
+shared/
+
+# Logs from startup scripts
+logs/
+.claude/

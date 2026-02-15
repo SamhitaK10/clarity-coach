@@ -1,0 +1,21 @@
+{
+  "name": "interview-coaching-api",
+  "version": "1.0.0",
+  "description": "Backend API for interview coaching app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "elevenlabs": "^1.59.0",
+    "elevenlabs-node": "^2.0.3",
+    "express": "^4.21.0",
+    "multer": "^2.0.0",
+    "node-fetch": "^2.7.0",
+    "openai": "^4.73.0"
+  }
+}
