@@ -20,7 +20,7 @@ The MVP flow:
 
 1. User records or uploads a short video in the browser.
 2. Video is sent to a backend endpoint.
-3. Backend forwards the video bytes to a **Modal** GPU function that runs **MediaPipe Holistic** to compute nonverbal metrics.
+3. Backend forwards the video bytes and runs **MediaPipe Holistic** to compute nonverbal metrics.
 4. Metrics are passed to an **LLM** (OpenAI/Anthropic) to generate concrete coaching suggestions.
 5. Frontend displays metrics + text feedback.
 

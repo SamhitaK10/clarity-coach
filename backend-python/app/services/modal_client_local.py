@@ -8,10 +8,15 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 
+print("[DEBUG] modal_client_local.py is being imported")
+
 # Add modal_functions to path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "modal_functions"))
 
+print(f"[DEBUG] Added to sys.path: {project_root / 'modal_functions'}")
+
+print("[DEBUG] About to import from utils...")
 from utils import (
     calculate_eye_contact_ratio,
     calculate_avg_torso_length,
@@ -21,6 +26,7 @@ from utils import (
     calculate_gesture_variety,
     convert_to_scores
 )
+print("[DEBUG] Successfully imported from utils")
 
 
 class ModalClient:
@@ -28,6 +34,7 @@ class ModalClient:
 
     def __init__(self):
         """Initialize local processing client."""
+        print("[DEBUG] ModalClient.__init__() called - using LOCAL processing")
         pass
 
     async def process_video(self, video_bytes: bytes) -> Dict:
