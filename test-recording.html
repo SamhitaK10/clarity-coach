@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Audio Recording</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    #status {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 5px;
+    }
+    #log {
+      margin: 20px 0;
+      padding: 15px;
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #0a0; }
+    .error { color: #f00; }
+  </style>
+</head>
+<body>
+  <h1>Audio Recording Test</h1>
+
+  <div>
+    <button id="start">Start Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
+    <button id="test">Test Upload</button>
+  </div>
+
+  <div id="status">Status: Ready</div>
+
+  <div id="log"></div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let stream;
+    let audioBlob;
+
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+    const testBtn = document.getElementById('test');
+    const status = document.getElementById('status');
+    const log = document.getElementById('log');
+
+    function addLog(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      log.textContent += `[${timestamp}] ${message}\n`;
+      log.scrollTop = log.scrollHeight;
+      console.log(message);
+    }
+
+    function updateStatus(msg) {
+      status.textContent = `Status: ${msg}`;
+      addLog(msg);
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        addLog('🎤 Requesting microphone access...');
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        addLog('✅ Microphone access granted');
+
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+        addLog(`📝 Using MIME type: ${mimeType}`);
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+            addLog(`📦 Chunk received: ${event.data.size} bytes`);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          audioBlob = new Blob(audioChunks, { type: mimeType });
+          addLog(`✅ Blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+          updateStatus(`Recording stopped. Blob size: ${audioBlob.size} bytes`);
+        };
+
+        mediaRecorder.start(100);
+        addLog('▶️ Recording started');
+        updateStatus('Recording...');
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      } catch (err) {
+        addLog(`❌ Error: ${err.message}`, 'error');
+        updateStatus(`Error: ${err.message}`);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        stream.getTracks().forEach(track => track.stop());
+        addLog('⏹️ Recording stopped');
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+
+    testBtn.addEventListener('click', async () => {
+      if (!audioBlob) {
+        addLog('❌ No audio blob available. Record first!', 'error');
+        return;
+      }
+
+      try {
+        addLog('📤 Preparing upload...');
+        addLog(`Blob size: ${audioBlob.size} bytes`);
+        addLog(`Blob type: ${audioBlob.type}`);
+
+        // Determine file extension
+        let extension = '.webm';
+        if (audioBlob.type.includes('mp4')) extension = '.mp4';
+        else if (audioBlob.type.includes('mpeg')) extension = '.mp3';
+        const filename = `recording${extension}`;
+        addLog(`Filename: ${filename}`);
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob, filename);
+
+        addLog('🚀 Sending to /api/test-upload...');
+        updateStatus('Uploading...');
+
+        const response = await fetch('http://localhost:3000/api/test-upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        addLog(`📡 Response: ${response.status} ${response.statusText}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          addLog('✅ Upload successful!', 'success');
+          addLog(JSON.stringify(data, null, 2));
+          updateStatus('Upload successful!');
+        } else {
+          const errorText = await response.text();
+          addLog(`❌ Upload failed: ${errorText}`, 'error');
+          updateStatus('Upload failed');
+        }
+      } catch (err) {
+        addLog(`❌ Error: ${err.message}`, 'error');
+        updateStatus(`Error: ${err.message}`);
+      }
+    });
+
+    addLog('Ready to record. Click "Start Recording"');
+  </script>
+</body>
+</html>
