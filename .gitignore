@@ -63,5 +63,11 @@ htmlcov/
 uploads/
 videos/
 
-# Old backend directory (can be removed manually)
+# Old/legacy directories (removed during cleanup)
 backend/
+frontend-video/
+shared/
+
+# Logs from startup scripts
+logs/
+.claude/
