@@ -12,6 +12,9 @@ import mediapipe as mp
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "modal_functions"))
 
+# Import settings for configuration
+from app.config import settings
+
 from utils import (
     calculate_eye_contact_ratio,
     calculate_avg_torso_length,
@@ -81,7 +84,9 @@ class ModalClient:
             frame_count = 0
             max_frames = 3000
 
-            print(f"[LOCAL] Processing video with MediaPipe...")
+            # Get frame skip interval from config
+            skip_frames = settings.frame_skip_interval
+            print(f"[LOCAL] Processing video with MediaPipe (processing every {skip_frames} frame(s))...")
 
             while cap.isOpened() and frame_count < max_frames:
                 ret, frame = cap.read()
@@ -89,6 +94,8 @@ class ModalClient:
                     break
 
                 frame_count += 1
+                if frame_count % skip_frames != 0:
+                    continue
 
                 # Convert BGR to RGB
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -116,11 +123,11 @@ class ModalClient:
             # Calculate basic metrics
             eye_contact_ratio = calculate_eye_contact_ratio(face_landmarks_list)
             avg_torso_length = calculate_avg_torso_length(pose_landmarks_list)
-            avg_hand_motion = calculate_avg_hand_motion(hand_landmarks_list)
+            avg_hand_motion = calculate_avg_hand_motion(hand_landmarks_list, skip_frames)
 
             # Calculate new metrics
             smile_ratio = calculate_smile_score(face_landmarks_list)
-            head_stability_movement = calculate_head_stability(pose_landmarks_list)
+            head_stability_movement = calculate_head_stability(pose_landmarks_list, skip_frames)
             gesture_variety_spread = calculate_gesture_variety(hand_landmarks_list)
 
             print(f"[LOCAL] Calculated raw features:")

@@ -23,11 +23,14 @@ class Settings(BaseSettings):
     max_video_size_mb: int = 50
     max_video_duration_seconds: int = 90
 
+    # Video Processing Configuration
+    frame_skip_interval: int = 3  # Process every Nth frame (1=all frames, 2=every other, 3=every third)
+
     # CORS Configuration
     cors_origins: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../.env",  # Look in parent directory (project root)
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"

@@ -128,7 +128,7 @@ def calculate_avg_torso_length(pose_landmarks_list: List[Optional[object]]) -> f
     return np.mean(torso_lengths)
 
 
-def calculate_avg_hand_motion(hand_landmarks_list: List[Dict[str, Optional[object]]]) -> float:
+def calculate_avg_hand_motion(hand_landmarks_list: List[Dict[str, Optional[object]]], frame_skip: int = 1) -> float:
     """
     Calculate average hand motion (wrist displacement between frames).
 
@@ -136,6 +136,7 @@ def calculate_avg_hand_motion(hand_landmarks_list: List[Dict[str, Optional[objec
 
     Args:
         hand_landmarks_list: List of dicts with 'left' and 'right' hand landmarks (one per frame)
+        frame_skip: Number of frames skipped between samples (for normalization)
 
     Returns:
         Average wrist displacement per frame
@@ -185,7 +186,9 @@ def calculate_avg_hand_motion(hand_landmarks_list: List[Dict[str, Optional[objec
     if not displacements:
         return 0.0
 
-    return np.mean(displacements)
+    # Normalize by frame skip interval to get per-frame displacement
+    avg_displacement = np.mean(displacements)
+    return avg_displacement / frame_skip
 
 
 def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
@@ -270,7 +273,7 @@ def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
     return smile_frames / valid_frames
 
 
-def calculate_head_stability(pose_landmarks_list: List[Optional[object]]) -> float:
+def calculate_head_stability(pose_landmarks_list: List[Optional[object]], frame_skip: int = 1) -> float:
     """
     Calculate head stability by measuring nose position variance.
 
@@ -279,6 +282,7 @@ def calculate_head_stability(pose_landmarks_list: List[Optional[object]]) -> flo
 
     Args:
         pose_landmarks_list: List of pose landmark objects from MediaPipe (one per frame)
+        frame_skip: Number of frames skipped between samples (for normalization)
 
     Returns:
         Average movement per frame (lower is more stable)
@@ -310,7 +314,9 @@ def calculate_head_stability(pose_landmarks_list: List[Optional[object]]) -> flo
         movement = np.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
         movements.append(movement)
 
-    return np.mean(movements) if movements else 0.0
+    # Normalize by frame skip interval to get per-frame movement
+    avg_movement = np.mean(movements) if movements else 0.0
+    return avg_movement / frame_skip
 
 
 def calculate_gesture_variety(hand_landmarks_list: List[Dict[str, Optional[object]]]) -> float:
