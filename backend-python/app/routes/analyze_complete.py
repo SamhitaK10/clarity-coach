@@ -20,6 +20,9 @@ class NonverbalMetrics(BaseModel):
     eye_contact_score: float
     posture_score: float
     gesture_score: float
+    smile_score: float
+    head_stability_score: float
+    gesture_variety_score: float
 
 
 class VerbalFeedback(BaseModel):
@@ -81,7 +84,10 @@ async def analyze_complete(file: UploadFile = File(...)):
         nonverbal_metrics = NonverbalMetrics(
             eye_contact_score=metrics_result['metrics']['eye_contact_score'],
             posture_score=metrics_result['metrics']['posture_score'],
-            gesture_score=metrics_result['metrics']['gesture_score']
+            gesture_score=metrics_result['metrics']['gesture_score'],
+            smile_score=metrics_result['metrics']['smile_score'],
+            head_stability_score=metrics_result['metrics']['head_stability_score'],
+            gesture_variety_score=metrics_result['metrics']['gesture_variety_score']
         )
         frame_count = metrics_result.get('frame_count', 0)
     except Exception as e:

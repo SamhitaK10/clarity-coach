@@ -130,10 +130,15 @@ function updateProgress(step) {
 
 // Display Results
 function displayResults(data) {
-    // Display nonverbal metrics
+    // Display nonverbal metrics (original)
     updateMetric('eye-contact', data.nonverbal.eye_contact_score);
     updateMetric('posture', data.nonverbal.posture_score);
     updateMetric('gesture', data.nonverbal.gesture_score);
+
+    // Display new metrics
+    updateMetric('smile', data.nonverbal.smile_score);
+    updateMetric('head-stability', data.nonverbal.head_stability_score);
+    updateMetric('gesture-variety', data.nonverbal.gesture_variety_score);
 
     // Display verbal feedback if available
     const verbalSection = document.getElementById('verbal-section');

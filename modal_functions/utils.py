@@ -188,7 +188,151 @@ def calculate_avg_hand_motion(hand_landmarks_list: List[Dict[str, Optional[objec
     return np.mean(displacements)
 
 
-def convert_to_scores(eye_contact_ratio: float, avg_torso_length: float, avg_hand_motion: float) -> Dict[str, float]:
+def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
+    """
+    Calculate the ratio of frames where the person appears to be smiling.
+
+    Uses mouth corner positions relative to mouth center.
+    Smile = corners lifted above their neutral position.
+
+    Args:
+        face_landmarks_list: List of face landmark objects from MediaPipe (one per frame)
+
+    Returns:
+        Ratio between 0 and 1 representing smile frequency
+    """
+    if not face_landmarks_list:
+        return 0.0
+
+    smile_frames = 0
+    valid_frames = 0
+
+    for landmarks in face_landmarks_list:
+        if landmarks is None:
+            continue
+
+        valid_frames += 1
+
+        try:
+            # Mouth landmarks:
+            # Left corner (61), right corner (291)
+            # Upper lip center (13), lower lip center (14)
+            left_corner = landmarks.landmark[61]
+            right_corner = landmarks.landmark[291]
+            upper_lip = landmarks.landmark[13]
+            lower_lip = landmarks.landmark[14]
+
+            # Calculate mouth center
+            mouth_center_y = (upper_lip.y + lower_lip.y) / 2
+
+            # Calculate average corner position
+            avg_corner_y = (left_corner.y + right_corner.y) / 2
+
+            # Smile detection: corners are lifted (lower y value = higher on screen)
+            # If corners are above center by threshold
+            if avg_corner_y < mouth_center_y - 0.01:
+                smile_frames += 1
+
+        except (IndexError, AttributeError):
+            continue
+
+    if valid_frames == 0:
+        return 0.0
+
+    return smile_frames / valid_frames
+
+
+def calculate_head_stability(pose_landmarks_list: List[Optional[object]]) -> float:
+    """
+    Calculate head stability by measuring nose position variance.
+
+    Lower variance = more stable (confident)
+    Higher variance = shaky/nervous
+
+    Args:
+        pose_landmarks_list: List of pose landmark objects from MediaPipe (one per frame)
+
+    Returns:
+        Average movement per frame (lower is more stable)
+    """
+    if len(pose_landmarks_list) < 2:
+        return 0.0
+
+    nose_positions = []
+
+    for landmarks in pose_landmarks_list:
+        if landmarks is None:
+            continue
+
+        try:
+            # Nose landmark (0)
+            nose = landmarks.landmark[0]
+            nose_positions.append((nose.x, nose.y))
+        except (IndexError, AttributeError):
+            continue
+
+    if len(nose_positions) < 2:
+        return 0.0
+
+    # Calculate movement between consecutive frames
+    movements = []
+    for i in range(1, len(nose_positions)):
+        prev = nose_positions[i-1]
+        curr = nose_positions[i]
+        movement = np.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
+        movements.append(movement)
+
+    return np.mean(movements) if movements else 0.0
+
+
+def calculate_gesture_variety(hand_landmarks_list: List[Dict[str, Optional[object]]]) -> float:
+    """
+    Calculate gesture variety by measuring spatial diversity of hand positions.
+
+    Higher variety = more engaging gestures
+    Lower variety = repetitive/monotone
+
+    Args:
+        hand_landmarks_list: List of dicts with 'left' and 'right' hand landmarks (one per frame)
+
+    Returns:
+        Spatial spread of hand positions (standard deviation)
+    """
+    if not hand_landmarks_list:
+        return 0.0
+
+    hand_positions = []
+
+    for landmarks_dict in hand_landmarks_list:
+        for hand in [landmarks_dict.get('left'), landmarks_dict.get('right')]:
+            if hand is None:
+                continue
+
+            try:
+                # Use middle finger tip (landmark 12) as representative point
+                middle_tip = hand.landmark[12]
+                hand_positions.append((middle_tip.x, middle_tip.y))
+            except (IndexError, AttributeError):
+                continue
+
+    if len(hand_positions) < 10:
+        return 0.0
+
+    # Calculate spatial spread (standard deviation in both dimensions)
+    x_coords = [p[0] for p in hand_positions]
+    y_coords = [p[1] for p in hand_positions]
+
+    x_spread = np.std(x_coords)
+    y_spread = np.std(y_coords)
+
+    # Combined spread
+    total_spread = x_spread + y_spread
+
+    return total_spread
+
+
+def convert_to_scores(eye_contact_ratio: float, avg_torso_length: float, avg_hand_motion: float,
+                      smile_ratio: float, head_stability_movement: float, gesture_variety_spread: float) -> Dict[str, float]:
     """
     Convert raw features to 0-100 scores.
 
@@ -196,9 +340,14 @@ def convert_to_scores(eye_contact_ratio: float, avg_torso_length: float, avg_han
         eye_contact_ratio: Raw ratio (0-1) of frames with eye contact
         avg_torso_length: Raw torso length (typically 0.2-0.5)
         avg_hand_motion: Raw hand motion (typically 0.001-0.05)
+        smile_ratio: Raw ratio (0-1) of frames with smiling
+        head_stability_movement: Average head movement per frame (0.001-0.02)
+        gesture_variety_spread: Spatial spread of hand positions (0.05-0.3)
 
     Returns:
-        Dictionary with eye_contact_score, posture_score, gesture_score (all 0-100)
+        Dictionary with six scores (all 0-100):
+        - eye_contact_score, posture_score, gesture_score
+        - smile_score, head_stability_score, gesture_variety_score
     """
     # Eye contact: direct mapping from ratio to percentage
     eye_contact_score = eye_contact_ratio * 100
@@ -226,8 +375,28 @@ def convert_to_scores(eye_contact_ratio: float, avg_torso_length: float, avg_han
 
     gesture_score = np.clip(gesture_score, 0, 100)
 
+    # Smile: direct mapping from ratio to percentage
+    smile_score = smile_ratio * 100
+
+    # Head stability: invert movement (lower movement = higher score)
+    # Typical range: 0.001 (very stable) to 0.02 (shaky)
+    # Map to 0-100 where lower movement = better
+    stability_score = max(0, 100 - (head_stability_movement * 5000))
+    stability_score = np.clip(stability_score, 0, 100)
+
+    # Gesture variety: normalize spread
+    # Typical range: 0.05 (low variety) to 0.3 (high variety)
+    # Map to 0-100
+    min_variety = 0.05
+    max_variety = 0.3
+    normalized_variety = (gesture_variety_spread - min_variety) / (max_variety - min_variety)
+    variety_score = np.clip(normalized_variety * 100, 0, 100)
+
     return {
         'eye_contact_score': round(float(eye_contact_score), 1),
         'posture_score': round(float(posture_score), 1),
-        'gesture_score': round(float(gesture_score), 1)
+        'gesture_score': round(float(gesture_score), 1),
+        'smile_score': round(float(smile_score), 1),
+        'head_stability_score': round(float(stability_score), 1),
+        'gesture_variety_score': round(float(variety_score), 1)
     }

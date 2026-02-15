@@ -16,6 +16,9 @@ from utils import (
     calculate_eye_contact_ratio,
     calculate_avg_torso_length,
     calculate_avg_hand_motion,
+    calculate_smile_score,
+    calculate_head_stability,
+    calculate_gesture_variety,
     convert_to_scores
 )
 
@@ -110,20 +113,43 @@ class ModalClient:
 
             print(f"[LOCAL] Completed processing {frame_count} frames")
 
-            # Calculate metrics
+            # Calculate basic metrics
             eye_contact_ratio = calculate_eye_contact_ratio(face_landmarks_list)
             avg_torso_length = calculate_avg_torso_length(pose_landmarks_list)
             avg_hand_motion = calculate_avg_hand_motion(hand_landmarks_list)
 
+            # Calculate new metrics
+            smile_ratio = calculate_smile_score(face_landmarks_list)
+            head_stability_movement = calculate_head_stability(pose_landmarks_list)
+            gesture_variety_spread = calculate_gesture_variety(hand_landmarks_list)
+
+            print(f"[LOCAL] Calculated raw features:")
+            print(f"  - Eye contact ratio: {eye_contact_ratio:.3f}")
+            print(f"  - Torso length: {avg_torso_length:.3f}")
+            print(f"  - Hand motion: {avg_hand_motion:.4f}")
+            print(f"  - Smile ratio: {smile_ratio:.3f}")
+            print(f"  - Head stability: {head_stability_movement:.4f}")
+            print(f"  - Gesture variety: {gesture_variety_spread:.3f}")
+
             # Convert to scores
-            scores = convert_to_scores(eye_contact_ratio, avg_torso_length, avg_hand_motion)
+            scores = convert_to_scores(
+                eye_contact_ratio,
+                avg_torso_length,
+                avg_hand_motion,
+                smile_ratio,
+                head_stability_movement,
+                gesture_variety_spread
+            )
 
             return {
                 'metrics': scores,
                 'raw_features': {
                     'eye_contact_ratio': round(float(eye_contact_ratio), 3),
                     'avg_torso_length': round(float(avg_torso_length), 3),
-                    'avg_hand_motion': round(float(avg_hand_motion), 4)
+                    'avg_hand_motion': round(float(avg_hand_motion), 4),
+                    'smile_ratio': round(float(smile_ratio), 3),
+                    'head_stability_movement': round(float(head_stability_movement), 4),
+                    'gesture_variety_spread': round(float(gesture_variety_spread), 3)
                 },
                 'frame_count': frame_count,
                 'error': None

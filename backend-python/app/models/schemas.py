@@ -26,6 +26,24 @@ class VideoMetrics(BaseModel):
         le=100,
         description="Gesture activity score (0-100). Moderate gesturing scores highest."
     )
+    smile_score: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Smile score (0-100). Higher indicates more smiling/warmth."
+    )
+    head_stability_score: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Head stability score (0-100). Higher indicates more stable/confident head position."
+    )
+    gesture_variety_score: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Gesture variety score (0-100). Higher indicates more diverse gestures."
+    )
 
 
 class RawFeatures(BaseModel):
