@@ -155,13 +155,14 @@ Format your response as clear bullet points."""
 
         return "\n\n".join(feedback_points)
 
-    async def generate_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None) -> str:
+    async def generate_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None, language: str = "en") -> str:
         """
         Generate conversational combined feedback for both nonverbal and verbal communication.
 
         Args:
             nonverbal_metrics: Dictionary with nonverbal scores
             verbal_feedback: Optional dictionary with verbal feedback
+            language: Language for feedback ('en' for English, 'es' for Spanish)
 
         Returns:
             Natural, conversational coaching feedback with follow-up question
@@ -170,7 +171,15 @@ Format your response as clear bullet points."""
         posture = nonverbal_metrics.get('posture_score', 0)
         gesture = nonverbal_metrics.get('gesture_score', 0)
 
-        prompt = f"""You are a supportive communication coach helping someone improve their presentation skills.
+        # Set language instruction
+        if language == "es":
+            lang_instruction = "IMPORTANTE: Responde completamente en español. Usa un tono natural y conversacional como si estuvieras hablando con ellos en persona."
+        else:
+            lang_instruction = "Respond in English."
+
+        prompt = f"""{lang_instruction}
+
+You are a supportive communication coach helping someone improve their presentation skills.
 
 NONVERBAL COMMUNICATION:
 - Eye Contact: {eye_contact}/100 (camera engagement)

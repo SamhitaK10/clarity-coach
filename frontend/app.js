@@ -12,6 +12,7 @@ const fileSize = document.getElementById('file-size');
 const analyzeBtn = document.getElementById('analyze-btn');
 const analyzeAnotherBtn = document.getElementById('analyze-another-btn');
 const tryAgainBtn = document.getElementById('try-again-btn');
+const languageSelect = document.getElementById('language-select');
 
 const errorMessage = document.getElementById('error-message');
 
@@ -88,6 +89,7 @@ analyzeBtn.addEventListener('click', async () => {
         // Create FormData
         const formData = new FormData();
         formData.append('file', selectedFile);
+        formData.append('language', languageSelect.value);
 
         // Call unified API
         const response = await fetch('http://localhost:8000/analyze-complete', {

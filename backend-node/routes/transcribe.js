@@ -34,24 +34,29 @@ router.post('/', upload.single('audio'), async (req, res) => {
   }
 
   const filePath = req.file.path;
+  const language = req.body.language || 'en'; // Get language from request, default to English
 
   try {
-    // 1️⃣ Transcribe audio
+    // 1️⃣ Transcribe audio with language parameter
     const buffer = await fs.promises.readFile(filePath);
     const file = await OpenAI.toFile(buffer, path.basename(filePath));
 
     const transcription = await openai.audio.transcriptions.create({
       file,
-      model: 'whisper-1'
+      model: 'whisper-1',
+      language: language // Pass language to Whisper API ('en' or 'es')
     });
 
     const transcript = transcription.text || transcription;
 
-    // 2️⃣ Get coaching feedback
+    // 2️⃣ Get coaching feedback with language
     const analyzeRes = await fetch("http://localhost:3000/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: transcript })
+      body: JSON.stringify({
+        text: transcript,
+        language: language
+      })
     });
 
     const feedback = await analyzeRes.json();

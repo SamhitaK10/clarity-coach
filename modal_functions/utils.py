@@ -192,8 +192,10 @@ def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
     """
     Calculate the ratio of frames where the person appears to be smiling.
 
-    Uses mouth corner positions relative to mouth center.
-    Smile = corners lifted above their neutral position.
+    Uses multiple indicators for more accurate detection:
+    1. Mouth corner lift (corners rise when smiling)
+    2. Mouth width increase (mouth widens when smiling)
+    3. Combined scoring for robustness
 
     Args:
         face_landmarks_list: List of face landmark objects from MediaPipe (one per frame)
@@ -204,6 +206,26 @@ def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
     if not face_landmarks_list:
         return 0.0
 
+    # First pass: collect baseline mouth widths for comparison
+    mouth_widths = []
+    for landmarks in face_landmarks_list:
+        if landmarks is None:
+            continue
+        try:
+            left_corner = landmarks.landmark[61]
+            right_corner = landmarks.landmark[291]
+            width = abs(right_corner.x - left_corner.x)
+            mouth_widths.append(width)
+        except (IndexError, AttributeError):
+            continue
+
+    if not mouth_widths:
+        return 0.0
+
+    # Calculate baseline (median width)
+    baseline_width = np.median(mouth_widths)
+
+    # Second pass: detect smiles using multiple indicators
     smile_frames = 0
     valid_frames = 0
 
@@ -222,15 +244,21 @@ def calculate_smile_score(face_landmarks_list: List[Optional[object]]) -> float:
             upper_lip = landmarks.landmark[13]
             lower_lip = landmarks.landmark[14]
 
-            # Calculate mouth center
+            # Indicator 1: Mouth corner lift
             mouth_center_y = (upper_lip.y + lower_lip.y) / 2
-
-            # Calculate average corner position
             avg_corner_y = (left_corner.y + right_corner.y) / 2
+            corner_lift = mouth_center_y - avg_corner_y
 
-            # Smile detection: corners are lifted (lower y value = higher on screen)
-            # If corners are above center by threshold
-            if avg_corner_y < mouth_center_y - 0.01:
+            # Indicator 2: Mouth width increase
+            current_width = abs(right_corner.x - left_corner.x)
+            width_increase = (current_width - baseline_width) / baseline_width
+
+            # Smile detection: corners lifted OR mouth widened
+            # More lenient thresholds for better detection
+            has_corner_lift = corner_lift > 0.008  # Slightly relaxed from 0.01
+            has_width_increase = width_increase > 0.03  # 3% wider than baseline
+
+            if has_corner_lift or has_width_increase:
                 smile_frames += 1
 
         except (IndexError, AttributeError):

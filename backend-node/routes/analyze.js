@@ -4,7 +4,31 @@ const Anthropic = require('@anthropic-ai/sdk');
 const router = express.Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const COACHING_SYSTEM = `
+function getCoachingSystem(language) {
+  if (language === 'es') {
+    return `
+Eres un entrenador de entrevistas que ayuda a hablantes no nativos de español a mejorar claridad y confianza.
+
+Dada una respuesta de entrevista, responde SOLO con JSON válido usando estas claves:
+
+- clarity: Retroalimentación breve sobre claridad y cómo mejorarla.
+- grammar: Correcciones gramaticales específicas si es necesario.
+- phrasing: Sugiere un fraseo más natural o idiomático.
+- fillerWords: Identifica muletillas y aconseja reducirlas.
+- exampleSentence: UNA oración de ejemplo mejorada.
+- followUp: Haz UNA pregunta de seguimiento corta y de apoyo para ayudar al usuario a mejorar su respuesta.
+- reply: Una respuesta de coaching hablada corta y natural (máximo 2 oraciones) que suene como un entrenador real hablando directamente con el usuario.
+
+Pautas:
+Mantén el tono de apoyo y humano.
+Mantén las respuestas concisas.
+Termina la respuesta con la pregunta de seguimiento.
+Responde SOLO con JSON.
+IMPORTANTE: Todo el contenido debe estar en español.
+`;
+  }
+
+  return `
 You are a supportive interview coach helping non-native English speakers improve clarity and confidence.
 
 Given an interview answer, respond ONLY with valid JSON using these keys:
@@ -23,14 +47,16 @@ Keep responses concise.
 End the reply with the follow-up question.
 Respond ONLY with JSON.
 `;
+}
 
 router.post('/', express.json(), async (req, res, next) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(503).json({ error: 'Analysis not configured: ANTHROPIC_API_KEY missing' });
   }
 
-  const { transcript, question } = req.body;
+  const { transcript, question, language } = req.body;
   const text = transcript || req.body.text;
+  const lang = language || 'en';
 
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'Request body must include "transcript" or "text".' });
@@ -41,6 +67,8 @@ router.post('/', express.json(), async (req, res, next) => {
     : `Answer:\n${text}`;
 
   try {
+    const COACHING_SYSTEM = getCoachingSystem(lang);
+
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 800,

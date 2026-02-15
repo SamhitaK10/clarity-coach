@@ -1,7 +1,7 @@
 """
 Complete video analysis route - analyzes both nonverbal and verbal communication.
 """
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Form
 from pydantic import BaseModel
 import httpx
 import io
@@ -48,7 +48,10 @@ class CompleteAnalysisResponse(BaseModel):
 
 
 @router.post("/analyze-complete", response_model=CompleteAnalysisResponse)
-async def analyze_complete(file: UploadFile = File(...)):
+async def analyze_complete(
+    file: UploadFile = File(...),
+    language: str = Form("en")
+):
     """
     Analyze video for complete communication assessment.
 
@@ -58,6 +61,7 @@ async def analyze_complete(file: UploadFile = File(...)):
 
     Args:
         file: Video file (MP4, AVI, MOV, WEBM)
+        language: Speech language ('en' for English, 'es' for Spanish)
 
     Returns:
         Complete analysis with nonverbal metrics and verbal feedback
@@ -104,13 +108,16 @@ async def analyze_complete(file: UploadFile = File(...)):
         # Step 3: Send audio to Node.js backend for speech analysis
         node_backend_url = "http://localhost:3000/api/transcribe"
 
-        # Create form data with audio file
+        # Create form data with audio file and language
         files = {
             'audio': (f'audio.{audio_format}', io.BytesIO(audio_bytes), f'audio/{audio_format}')
         }
+        data = {
+            'language': language
+        }
 
         async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(node_backend_url, files=files)
+            response = await client.post(node_backend_url, files=files, data=data)
 
             if response.status_code == 200:
                 result = response.json()
@@ -138,7 +145,8 @@ async def analyze_complete(file: UploadFile = File(...)):
 
     combined_feedback = await llm_client.generate_combined_feedback(
         nonverbal_metrics=nonverbal_metrics.model_dump(),
-        verbal_feedback=verbal_feedback.model_dump() if verbal_feedback else None
+        verbal_feedback=verbal_feedback.model_dump() if verbal_feedback else None,
+        language=language
     )
 
     # Step 5: Generate voice coaching (optional - graceful degradation if fails)
