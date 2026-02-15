@@ -5,6 +5,7 @@ Follow these steps in order to get Clarity Coach running.
 ## Prerequisites
 
 - [ ] Python 3.9 or higher installed
+- [ ] Node.js 16 or higher installed (for audio coaching)
 - [ ] Internet connection for downloading dependencies
 
 ## Step-by-Step Setup
@@ -12,22 +13,35 @@ Follow these steps in order to get Clarity Coach running.
 ### 1. Install Dependencies
 
 ```bash
-# Install all requirements (MediaPipe, OpenCV, FastAPI, etc.)
+# Install Python requirements (MediaPipe, OpenCV, FastAPI, etc.)
 pip install -r requirements.txt
+
+# Install Node.js requirements (for audio coaching)
+cd backend-node
+npm install
+cd ..
 ```
 
-✅ **What this installs**: MediaPipe, OpenCV, FastAPI, OpenAI SDK, and all dependencies
-⏱️ **Time**: ~2-3 minutes
+✅ **What this installs**:
+- Python: MediaPipe, OpenCV, FastAPI, OpenAI SDK, and dependencies
+- Node.js: Express, OpenAI SDK, Anthropic SDK, and dependencies
+⏱️ **Time**: ~3-5 minutes total
 
 ---
 
-### 2. OpenAI API Setup
+### 2. API Keys Setup
 
+**OpenAI API (Required for both modes):**
 - [ ] Go to https://platform.openai.com/api-keys
 - [ ] Sign in or create account
 - [ ] Click "Create new secret key"
-- [ ] Name it "clarity-coach"
 - [ ] Copy the key (starts with `sk-proj-...`)
+
+**Anthropic API (Required for Interview Coaching):**
+- [ ] Go to https://console.anthropic.com
+- [ ] Sign in or create account
+- [ ] Generate API key
+- [ ] Copy the key (starts with `sk-ant-...`)
 
 ---
 
@@ -39,9 +53,19 @@ pip install -r requirements.txt
 
 Create `.env` with:
 ```env
+# OpenAI (used by both backends)
 OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY_HERE
+
+# Anthropic (for interview coaching)
+ANTHROPIC_API_KEY=sk-ant-YOUR_ACTUAL_KEY_HERE
+
+# Python backend config
 LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o-mini
+BACKEND_PORT=8000
+
+# Node.js backend config
+PORT=3000
 ```
 
 ---
@@ -49,39 +73,53 @@ LLM_MODEL=gpt-4o-mini
 ### 4. Test Locally (Optional but Recommended)
 
 ```bash
-# Add a test video to videos/ folder
+# Test video processing with 6 metrics
 python test_video_local.py
 ```
 
-✅ **What this does**: Validates MediaPipe is detecting face, pose, and hands correctly
-⏱️ **Time**: ~20-30 seconds
+✅ **What this does**: Validates MediaPipe is detecting face, pose, hands, and calculating all 6 metrics
+⏱️ **Time**: ~30-60 seconds (local CPU processing)
 
 ---
 
-### 5. Start Backend Server
+### 5. Start Both Backend Servers
 
+Open **two terminal windows**:
+
+**Terminal 1 - Python Backend (Video Coaching):**
 ```bash
-# From project root
-cd backend
+cd backend-python
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-You should see:
+**Terminal 2 - Node.js Backend (Audio Coaching):**
+```bash
+cd backend-node
+node server.js
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000
-INFO:     Application startup complete.
-```
+
+You should see both servers running:
+- Python backend on http://localhost:8000
+- Node.js backend on http://localhost:3000
 
 ---
 
-### 7. Test the Application
+### 6. Test the Application
 
 - [ ] Open browser to http://localhost:8000
-- [ ] You should see the Clarity Coach interface
-- [ ] Upload a test video (30-60 seconds, MP4 format)
-- [ ] Click "Analyze Video"
-- [ ] Wait 15-40 seconds for processing
-- [ ] View your metrics and coaching feedback
+- [ ] You should see the Clarity Coach landing page
+- [ ] **Test Presentation Coaching:**
+  - Click "Start Video Analysis"
+  - Upload a test video (30-60 seconds, MP4 format)
+  - Click "Analyze Video"
+  - Wait 30-60 seconds for processing
+  - View all 6 metrics and coaching feedback
+- [ ] **Test Interview Coaching:**
+  - Return to landing page
+  - Click "Start Interview Practice"
+  - Record or upload audio
+  - Click "Get Feedback"
+  - Review transcription and coaching
 
 ---
 
@@ -99,7 +137,7 @@ python debug_landmarks.py
 # ✅ Should show face/pose/hand detection stats
 
 # 3. Check .env is loaded
-python -c "from backend.app.config import settings; print('OpenAI key configured:', bool(settings.openai_api_key))"
+python -c "from backend-python.app.config import settings; print('OpenAI key configured:', bool(settings.openai_api_key))"
 # ✅ Should print "True"
 
 # 4. Check backend is running
@@ -144,7 +182,11 @@ pip install "numpy<2"  # MediaPipe needs NumPy 1.x
 
 **Solution**:
 ```bash
-pip install -r backend/requirements.txt
+# Python dependencies
+pip install -r requirements.txt
+
+# Node.js dependencies
+cd backend-node && npm install
 ```
 
 ---
@@ -152,9 +194,10 @@ pip install -r backend/requirements.txt
 ### ❌ Backend won't start
 
 **Solution**:
-- Make sure port 8000 is not in use
+- Make sure ports 8000 and 3000 are not in use
 - Check `.env` file exists in project root
-- Try: `cd backend && uvicorn app.main:app --reload`
+- Python backend: `cd backend-python && uvicorn app.main:app --reload`
+- Node.js backend: `cd backend-node && node server.js`
 
 ---
 
@@ -169,10 +212,12 @@ pip install -r backend/requirements.txt
 
 ## Next Steps After Setup
 
-1. Test with your own videos
+1. Test with your own videos and audio recordings
 2. Review the coaching feedback quality
-3. Adjust metrics if needed (see `modal_functions/utils.py`)
-4. Customize LLM prompts (see `backend/app/services/llm_client.py`)
+3. Adjust metrics if needed:
+   - Video metrics: `modal_functions/utils.py`
+   - Prompts: `backend-python/app/services/llm_client.py` and `backend-node/routes/analyze.js`
+4. Try Spanish language support (in presentation mode)
 5. Deploy to production (see README.md deployment section)
 
 ---

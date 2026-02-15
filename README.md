@@ -11,8 +11,12 @@ Analyze nonverbal communication in 30-60 second workplace videos:
 - 👁️ Eye contact analysis using MediaPipe iris tracking
 - 🧍 Posture assessment (upright vs. slouched)
 - 👋 Gesture activity tracking
-- 📊 Quantified metrics (0-100 scores)
+- 😊 Smile detection and warmth measurement
+- 🎯 Head stability (confidence indicator)
+- 🤲 Gesture variety (engagement measure)
+- 📊 Quantified metrics (0-100 scores for all 6 metrics)
 - 🤖 AI coaching feedback (OpenAI GPT-4o-mini)
+- 🌐 Multi-language support (English, Spanish)
 
 ### 🎤 Interview Coaching (Audio)
 Practice interview answers with AI feedback on speech:
@@ -68,7 +72,8 @@ Clarity Coach uses a **dual-backend architecture** to support both video and aud
 
 2. **Python Backend** (`backend-python/`):
    - FastAPI server for video processing (port 8000)
-   - MediaPipe Holistic for nonverbal analysis
+   - Local MediaPipe Holistic processing (CPU-based, no GPU required)
+   - Optional Modal GPU acceleration for faster processing
    - OpenAI GPT-4o-mini for coaching feedback
 
 3. **Node.js Backend** (`backend-node/`):
@@ -77,7 +82,9 @@ Clarity Coach uses a **dual-backend architecture** to support both video and aud
    - Claude/Anthropic for interview coaching analysis
    - ElevenLabs for voice synthesis (optional)
 
-4. **Modal Functions** (optional): GPU-accelerated video processing for production
+4. **Modal Functions** (optional): GPU-accelerated video processing for faster performance
+   - By default, processing runs locally on CPU
+   - Modal provides optional cloud GPU acceleration
 
 ## Prerequisites
 
@@ -261,7 +268,10 @@ Response:
   "metrics": {
     "eye_contact_score": 75.0,
     "posture_score": 82.0,
-    "gesture_score": 65.0
+    "gesture_score": 65.0,
+    "smile_score": 58.0,
+    "head_stability_score": 85.0,
+    "gesture_variety_score": 72.0
   },
   "feedback": "• Your eye contact is strong...\n• Excellent posture...\n• Consider using more hand gestures...",
   "frame_count": 900
@@ -303,8 +313,7 @@ clarity-coach/
 │   │   ├── routes/
 │   │   │   └── analyze.py               # POST /analyze endpoint
 │   │   ├── services/
-│   │   │   ├── modal_client_local.py    # Local MediaPipe processing
-│   │   │   ├── modal_client.py          # Modal GPU client (optional)
+│   │   │   ├── modal_client_local.py    # Local MediaPipe processing (default)
 │   │   │   └── llm_client.py            # OpenAI client
 │   │   └── models/
 │   │       └── schemas.py               # Pydantic models
@@ -371,6 +380,35 @@ Measures hand movement activity by tracking wrist displacement between frames. M
 - **40-69**: Either too few or too many gestures
 - **0-39**: Very limited or excessive gesturing
 - **0**: No hands detected in video (hands out of frame)
+
+### Smile Score (0-100)
+
+Measures the frequency of smiling throughout the video. Detects smiles using mouth corner lift and mouth width changes.
+
+- **90-100**: Frequent, natural smiling (warm and engaging)
+- **70-89**: Good amount of smiling
+- **40-69**: Occasional smiles
+- **0-39**: Rarely smiling (may appear distant or serious)
+- **0**: No face detected or no smiles detected
+
+### Head Stability Score (0-100)
+
+Measures how stable the head position is during speaking. Tracks nose position variance across frames.
+
+- **90-100**: Very stable, confident delivery
+- **70-89**: Good stability with natural movement
+- **40-69**: Moderate movement, some nervousness may show
+- **0-39**: Shaky or excessive head movement (may indicate nervousness)
+
+### Gesture Variety Score (0-100)
+
+Measures the spatial diversity of hand gestures. Higher variety indicates more engaging, dynamic gesturing.
+
+- **90-100**: Excellent gesture variety (highly engaging)
+- **70-89**: Good variety in hand movements
+- **40-69**: Moderate variety (somewhat repetitive)
+- **0-39**: Limited variety (monotonous gesturing)
+- **0**: No hands detected or insufficient gesture data
 
 ## Testing the Modal Function
 

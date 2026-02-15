@@ -80,12 +80,16 @@ http://localhost:8000
 
 1. Click **"Start Video Analysis"** from landing page
 2. Upload or drag & drop a video (30-60 seconds, MP4/MOV/WEBM)
-3. Click **"Analyze Video"** and wait 30-60 seconds
-4. Review your scores:
-   - **Eye Contact** (0-100)
-   - **Posture** (0-100)
-   - **Gestures** (0-100)
+3. Click **"Analyze Video"** and wait 30-60 seconds (local CPU processing)
+4. Review your scores (all 0-100):
+   - **Eye Contact** - How often you look at the camera
+   - **Posture** - Upright vs. slouched posture
+   - **Gestures** - Hand movement activity
+   - **Smile** - Warmth and approachability
+   - **Head Stability** - Confidence indicator
+   - **Gesture Variety** - Engagement measure
 5. Read AI coaching feedback
+6. Language support: English and Spanish
 
 **Tips:**
 - Face the camera directly
@@ -146,9 +150,10 @@ pip install "numpy<2"
 
 ### Slow Processing
 
-- **Video**: 30-60 seconds (normal for CPU processing)
-- **Audio**: 10-30 seconds (depends on audio length)
-- For faster video processing, set up Modal GPU (optional)
+- **Video**: 30-60 seconds is normal for local CPU processing
+  - Processing happens locally on your machine (no cloud required)
+  - For 2-3x faster processing, optionally set up Modal GPU acceleration
+- **Audio**: 10-30 seconds (depends on audio length and OpenAI API speed)
 
 ### Audio Transcription Fails
 
@@ -162,11 +167,13 @@ pip install "numpy<2"
 
 **Test video processing:**
 ```bash
+# Test local MediaPipe processing with 6 metrics
 python test_video_local.py
 ```
 
 **Debug MediaPipe landmarks:**
 ```bash
+# Verify face, pose, and hand detection
 python debug_landmarks.py
 ```
 
