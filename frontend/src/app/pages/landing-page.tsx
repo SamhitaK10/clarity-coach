@@ -1,6 +1,9 @@
 import { useNavigate } from "react-router";
-import logoImage from "figma:asset/6d0fec36f5b754d327b3baf1af81bb9d99c20aa5.png";
-import llamaImage from "figma:asset/ba3f08758491f6b17708870b4e0ceee5f6152335.png";
+// Figma assets removed - not available in repository
+// import logoImage from "figma:asset/6d0fec36f5b754d327b3baf1af81bb9d99c20aa5.png";
+// import llamaImage from "figma:asset/ba3f08758491f6b17708870b4e0ceee5f6152335.png";
+const logoImage = "";
+const llamaImage = "";
 import { motion } from "motion/react";
 
 export function LandingPage() {

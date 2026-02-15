@@ -1,27 +1,30 @@
 @echo off
 echo ========================================
-echo Starting Clarity Coach Platform
+echo Clarity Coach - LOCAL DEVELOPMENT
 echo ========================================
 echo.
 
-echo [1/2] Starting Python Backend (Video Analysis) on port 8000...
-start "Clarity Coach - Python Backend" cmd /k "cd backend-python && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+echo [1/3] Starting React Frontend (Vite Dev) on port 5173...
+start "Clarity Coach - Frontend" cmd /k "cd frontend && npm run dev"
 
-timeout /t 3 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
-echo [2/2] Starting Node.js Backend (Audio Analysis) on port 3000...
-start "Clarity Coach - Node.js Backend" cmd /k "cd backend-node && node server.js"
+echo [2/3] Starting Python Backend on port 8000...
+start "Clarity Coach - Python" cmd /k "cd backend-python && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+timeout /t 2 /nobreak >nul
+
+echo [3/3] Starting Node.js Backend on port 3000...
+start "Clarity Coach - Node.js" cmd /k "cd backend-node && node server.js"
 
 echo.
 echo ========================================
-echo Both backends are starting...
+echo All systems running!
 echo ========================================
 echo.
-echo Python Backend: http://localhost:8000
-echo Node.js Backend: http://localhost:3000
+echo Frontend: http://localhost:5173  ^<-- OPEN THIS
+echo Python API: http://localhost:8000/docs
+echo Node.js: http://localhost:3000/health
 echo.
-echo Open your browser to: http://localhost:8000
-echo.
-echo Press any key to exit this window...
-echo (The backends will continue running in separate windows)
+echo Press any key to exit...
 pause >nul
