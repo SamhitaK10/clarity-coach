@@ -22,6 +22,28 @@ router.post("/", async (req, res) => {
       }
     );
 
+    // Check if ElevenLabs API call was successful
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('ElevenLabs API error:', response.status, errorText);
+
+      // Try to parse error message
+      let errorMessage = 'Voice generation failed';
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.detail?.status === 'quota_exceeded') {
+          errorMessage = 'ElevenLabs quota exceeded. Please check your API usage.';
+        } else if (errorJson.detail?.message) {
+          errorMessage = errorJson.detail.message;
+        }
+      } catch (e) {
+        // If not JSON, use text directly
+        errorMessage = errorText || 'Voice generation failed';
+      }
+
+      return res.status(response.status).json({ error: errorMessage });
+    }
+
     const audioBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(audioBuffer).toString("base64");
 

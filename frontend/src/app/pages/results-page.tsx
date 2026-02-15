@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { motion } from "motion/react";
+import { ConversationModal } from "../components/conversation/ConversationModal";
 
 interface NonverbalMetrics {
   eye_contact_score: number;
@@ -39,6 +40,7 @@ export function ResultsPage() {
 
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isConversationOpen, setIsConversationOpen] = useState(false);
 
   // Redirect if no results
   if (!state?.results) {
@@ -399,7 +401,7 @@ export function ResultsPage() {
           className="flex gap-6 justify-center pb-12"
         >
           <button
-            onClick={() => navigate('/recording')}
+            onClick={() => setIsConversationOpen(true)}
             className="px-8 py-4 rounded-xl font-semibold text-lg transition-all"
             style={{
               backgroundColor: '#FAF5F0',
@@ -413,6 +415,26 @@ export function ResultsPage() {
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(250, 245, 240, 0.3)';
+            }}
+          >
+            💬 Talk to AI Coach
+          </button>
+          <button
+            onClick={() => navigate('/recording')}
+            className="px-8 py-4 rounded-xl font-semibold text-lg transition-all"
+            style={{
+              backgroundColor: 'rgba(250, 245, 240, 0.2)',
+              color: '#FAF5F0',
+              border: '2px solid rgba(250, 245, 240, 0.4)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(250, 245, 240, 0.3)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(250, 245, 240, 0.2)';
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             Practice Again
@@ -439,6 +461,13 @@ export function ResultsPage() {
           </button>
         </motion.div>
       </div>
+
+      {/* Conversation Modal */}
+      <ConversationModal
+        isOpen={isConversationOpen}
+        onClose={() => setIsConversationOpen(false)}
+        analysisContext={state.results as any}
+      />
     </div>
   );
 }

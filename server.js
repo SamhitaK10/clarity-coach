@@ -6,6 +6,7 @@ const cors = require('cors');
 const transcribeRouter = require('./routes/transcribe');
 const analyzeRouter = require('./routes/analyze');
 const voiceFeedbackRouter = require('./routes/voice-feedback');
+const conversationRouter = require('./routes/conversation');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/api/transcribe', transcribeRouter);
 app.use('/api/analyze', analyzeRouter);
 app.use('/api/voice-feedback', voiceFeedbackRouter);
+app.use('/api/conversation', conversationRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Interview coaching API is running' });
