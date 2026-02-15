@@ -53,9 +53,9 @@ videoInput.addEventListener('change', (e) => {
 // Handle File Selection
 function handleFileSelect(file) {
     // Validate file type
-    const validTypes = ['video/mp4', 'video/mov', 'video/webm', 'video/quicktime'];
+    const validTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/webm', 'video/quicktime'];
     if (!validTypes.includes(file.type)) {
-        showError('Invalid file type. Please upload MP4, MOV, or WEBM video.');
+        showError('Invalid file type. Please upload MP4, AVI, MOV, or WEBM video.');
         return;
     }
 
@@ -82,15 +82,14 @@ analyzeBtn.addEventListener('click', async () => {
 
     // Show loading section
     showSection(loadingSection);
-    updateProgress(1);
 
     try {
         // Create FormData
         const formData = new FormData();
         formData.append('file', selectedFile);
 
-        // Call unified API
-        const response = await fetch('http://localhost:8000/analyze-complete', {
+        // Call API (Python backend on port 8000)
+        const response = await fetch('http://localhost:8000/analyze', {
             method: 'POST',
             body: formData
         });
@@ -100,11 +99,7 @@ analyzeBtn.addEventListener('click', async () => {
             throw new Error(errorData.detail || 'Analysis failed');
         }
 
-        updateProgress(2);
-
         const result = await response.json();
-
-        updateProgress(3);
 
         // Display results
         displayResults(result);
@@ -116,50 +111,21 @@ analyzeBtn.addEventListener('click', async () => {
     }
 });
 
-// Update Progress Steps
-function updateProgress(step) {
-    const steps = document.querySelectorAll('.step');
-    steps.forEach((s, index) => {
-        if (index < step) {
-            s.classList.add('active');
-        } else {
-            s.classList.remove('active');
-        }
-    });
-}
-
 // Display Results
 function displayResults(data) {
-    // Display nonverbal metrics
-    updateMetric('eye-contact', data.nonverbal.eye_contact_score);
-    updateMetric('posture', data.nonverbal.posture_score);
-    updateMetric('gesture', data.nonverbal.gesture_score);
+    const { metrics, feedback, frame_count } = data;
 
-    // Display verbal feedback if available
-    const verbalSection = document.getElementById('verbal-section');
-    if (data.verbal && !data.verbal_analysis_error) {
-        verbalSection.classList.remove('hidden');
+    // Update metric values and progress bars
+    updateMetric('eye-contact', metrics.eye_contact_score);
+    updateMetric('posture', metrics.posture_score);
+    updateMetric('gesture', metrics.gesture_score);
 
-        // Transcript
-        document.getElementById('transcript-content').textContent = data.verbal.transcript;
+    // Update feedback
+    const feedbackContent = document.getElementById('feedback-content');
+    feedbackContent.textContent = feedback;
 
-        // Feedback cards
-        document.getElementById('clarity-feedback').textContent = data.verbal.clarity || 'N/A';
-        document.getElementById('grammar-feedback').textContent = data.verbal.grammar || 'N/A';
-        document.getElementById('phrasing-feedback').textContent = data.verbal.phrasing || 'N/A';
-        document.getElementById('filler-feedback').textContent = data.verbal.fillerWords || 'N/A';
-
-        // Example sentence
-        document.getElementById('example-sentence').textContent = data.verbal.exampleSentence || '';
-    } else {
-        verbalSection.classList.add('hidden');
-        if (data.verbal_analysis_error) {
-            console.warn('Verbal analysis failed:', data.verbal_analysis_error);
-        }
-    }
-
-    // Combined coaching feedback
-    document.getElementById('combined-feedback').textContent = data.combined_feedback;
+    // Update meta info
+    document.getElementById('frame-count').textContent = frame_count || 'N/A';
 }
 
 // Update Metric Display

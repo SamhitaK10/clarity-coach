@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 from .config import settings
-from .routes import analyze
+from .routes import analyze, analyze_complete
 
 # Create FastAPI app
 app = FastAPI(
@@ -29,6 +29,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(analyze.router)
+app.include_router(analyze_complete.router)
 
 # Mount static files for frontend
 frontend_dir = Path(__file__).parent.parent.parent / "frontend"

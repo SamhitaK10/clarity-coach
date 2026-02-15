@@ -1,54 +1,97 @@
 # 🎯 Clarity Coach
 
-AI-powered workplace communication assistant that analyzes short video presentations to provide nonverbal feedback on eye contact, posture, and gesture activity.
+AI-powered workplace communication assistant with dual coaching modes: **Video/Presentation Coaching** for nonverbal communication analysis, and **Audio/Interview Coaching** for speech clarity and confidence.
 
 ## Overview
 
-Clarity Coach helps professionals improve their workplace communication by analyzing 30-60 second videos and providing concrete, actionable coaching on nonverbal communication patterns.
+Clarity Coach is a unified platform that helps professionals improve their workplace communication through AI-powered analysis and feedback.
 
-**Key Features:**
-- 🎥 Automated video analysis using MediaPipe Holistic with iris tracking
-- 📊 Three key metrics: Eye Contact, Posture, and Gestures (0-100 scores)
-- 🤖 AI-powered coaching feedback using OpenAI GPT-4o-mini
-- ⚡ Local CPU processing (30-60 seconds) or optional Modal GPU (faster)
-- 🌐 Clean web interface for easy use
-- 🔧 Test scripts for debugging and validation
+### 🎥 Presentation Coaching (Video)
+Analyze nonverbal communication in 30-60 second workplace videos:
+- 👁️ Eye contact analysis using MediaPipe iris tracking
+- 🧍 Posture assessment (upright vs. slouched)
+- 👋 Gesture activity tracking
+- 📊 Quantified metrics (0-100 scores)
+- 🤖 AI coaching feedback (OpenAI GPT-4o-mini)
+
+### 🎤 Interview Coaching (Audio)
+Practice interview answers with AI feedback on speech:
+- 🎙️ Audio transcription (OpenAI Whisper)
+- 💡 Clarity and confidence feedback
+- ✍️ Grammar and phrasing suggestions
+- ⚠️ Filler word detection
+- 🗣️ Voice synthesis coaching tips (ElevenLabs)
+- 🤖 AI analysis (Claude/Anthropic)
 
 ## Architecture
 
-```
-┌─────────────┐
-│  Frontend   │  Static HTML/CSS/JS
-│  (Browser)  │
-└──────┬──────┘
-       │ POST /analyze
-       ▼
-┌─────────────┐
-│   FastAPI   │  Backend API
-│   Backend   │
-└──────┬──────┘
-       │
-       ├─────► Local MediaPipe ──► Holistic + Iris ──► Metrics
-       │        (CPU, runs anywhere)
-       │
-       └─────► OpenAI GPT-4o-mini ──► Coaching Feedback
-```
+Clarity Coach uses a **dual-backend architecture** to support both video and audio coaching:
 
-**Optional Modal GPU acceleration available** for faster processing in `modal_functions/`.
+```
+                    ┌─────────────────┐
+                    │   Frontend      │
+                    │  Landing Page   │
+                    └────────┬────────┘
+                             │
+                ┌────────────┴────────────┐
+                │                         │
+                ▼                         ▼
+      ┌──────────────────┐      ┌──────────────────┐
+      │ Presentation     │      │ Interview        │
+      │ Coaching         │      │ Coaching         │
+      │ (presentation    │      │ (interview       │
+      │  .html)          │      │  .html)          │
+      └────────┬─────────┘      └────────┬─────────┘
+               │                         │
+               │ POST /analyze           │ POST /api/transcribe
+               │ (video)                 │ (audio)
+               ▼                         ▼
+      ┌──────────────────┐      ┌──────────────────┐
+      │ Python Backend   │      │ Node.js Backend  │
+      │ FastAPI          │      │ Express          │
+      │ Port 8000        │      │ Port 3000        │
+      └────────┬─────────┘      └────────┬─────────┘
+               │                         │
+               ├─ MediaPipe              ├─ Whisper (OpenAI)
+               │  Holistic + Iris        │
+               │                         ├─ Claude (Anthropic)
+               └─ OpenAI GPT-4o-mini     │
+                  (feedback)             └─ ElevenLabs (voice)
+```
 
 ### Components
 
-1. **Frontend** (`frontend/`): Simple HTML/CSS/JS interface for video upload and results
-2. **Backend** (`backend/app/`): FastAPI server with local MediaPipe processing
-3. **LLM Integration**: OpenAI GPT-4o-mini for generating coaching feedback
-4. **Test Scripts**: Local testing and debugging tools
-5. **Modal Functions** (optional): GPU-accelerated processing for production
+1. **Frontend** (`frontend/`):
+   - `index.html`: Landing page with mode selection
+   - `presentation.html`: Video upload and nonverbal analysis results
+   - `interview.html`: Audio recording/upload and speech analysis results
+
+2. **Python Backend** (`backend-python/`):
+   - FastAPI server for video processing (port 8000)
+   - MediaPipe Holistic for nonverbal analysis
+   - OpenAI GPT-4o-mini for coaching feedback
+
+3. **Node.js Backend** (`backend-node/`):
+   - Express server for audio processing (port 3000)
+   - OpenAI Whisper for transcription
+   - Claude/Anthropic for interview coaching analysis
+   - ElevenLabs for voice synthesis (optional)
+
+4. **Modal Functions** (optional): GPU-accelerated video processing for production
 
 ## Prerequisites
 
-- **Python 3.9+**
-- **OpenAI API key**: [platform.openai.com](https://platform.openai.com)
-- **Optional**: Modal account for GPU acceleration: [modal.com](https://modal.com)
+### Required:
+- **Python 3.9+** (for video coaching backend)
+- **Node.js 16+** (for audio coaching backend)
+- **OpenAI API key**: [platform.openai.com](https://platform.openai.com) (used by both backends)
+
+### For Interview Coaching:
+- **Anthropic API key**: [console.anthropic.com](https://console.anthropic.com) (Claude for interview analysis)
+
+### Optional:
+- **ElevenLabs API key**: [elevenlabs.io](https://elevenlabs.io) (voice synthesis for audio feedback)
+- **Modal account**: [modal.com](https://modal.com) (GPU acceleration for video processing)
 
 ## Installation
 
@@ -59,44 +102,68 @@ git clone https://github.com/yourusername/clarity-coach.git
 cd clarity-coach
 ```
 
-### 2. Install Dependencies
+### 2. Install Python Dependencies
 
-Install all required dependencies (includes MediaPipe, OpenCV, FastAPI):
+Install dependencies for video coaching (Python backend):
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment Variables
+### 3. Install Node.js Dependencies
 
-Create a `.env` file in the project root with your OpenAI API key:
+Install dependencies for audio coaching (Node.js backend):
 
 ```bash
-# Create .env file
-echo "OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY_HERE" > .env
-echo "LLM_PROVIDER=openai" >> .env
-echo "LLM_MODEL=gpt-4o-mini" >> .env
+cd backend-node
+npm install
+cd ..
 ```
 
-Or manually create `.env`:
+### 4. Configure Environment Variables
+
+Copy the example environment file and add your API keys:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your actual API keys:
 
 ```env
-# OpenAI API (REQUIRED)
-# Get from: https://platform.openai.com/api-keys
-OPENAI_API_KEY=sk-proj-YOUR_ACTUAL_KEY_HERE
+# =============================================================================
+# OpenAI API (REQUIRED - Used by both backends)
+# =============================================================================
+OPENAI_API_KEY=sk-proj-YOUR_OPENAI_KEY_HERE
 
-# LLM Configuration
+# =============================================================================
+# Anthropic API (REQUIRED for Interview Coaching)
+# =============================================================================
+ANTHROPIC_API_KEY=sk-ant-YOUR_ANTHROPIC_KEY_HERE
+
+# =============================================================================
+# ElevenLabs API (OPTIONAL - for voice synthesis)
+# =============================================================================
+# ELEVENLABS_API_KEY=YOUR_ELEVENLABS_KEY_HERE
+
+# =============================================================================
+# Python Backend Configuration (Video/Presentation Coaching)
+# =============================================================================
 LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o-mini
-
-# Backend Configuration (Optional - defaults shown)
 BACKEND_HOST=0.0.0.0
 BACKEND_PORT=8000
 MAX_VIDEO_SIZE_MB=50
 MAX_VIDEO_DURATION_SECONDS=90
+
+# =============================================================================
+# Node.js Backend Configuration (Audio/Interview Coaching)
+# =============================================================================
+PORT=3000
+NODE_ENV=development
 ```
 
-### 4. Test Locally (Optional but Recommended)
+### 5. Test Video Processing (Optional but Recommended)
 
 Test video processing with a sample video:
 
@@ -105,18 +172,27 @@ Test video processing with a sample video:
 python test_video_local.py
 ```
 
-This validates MediaPipe is working correctly.
+This validates MediaPipe is working correctly for presentation coaching.
 
 ## Usage
 
-### Start the Backend Server
+### Start Both Backend Servers
 
+You need to run both backends simultaneously for full functionality.
+
+**Terminal 1 - Python Backend (Video Coaching):**
 ```bash
-cd backend
+cd backend-python
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The server will start with auto-reload enabled (changes to code auto-refresh).
+**Terminal 2 - Node.js Backend (Audio Coaching):**
+```bash
+cd backend-node
+node server.js
+```
+
+Both servers will start with auto-reload enabled (changes to code auto-refresh).
 
 ### Access the Web Interface
 
@@ -126,12 +202,33 @@ Open your browser and navigate to:
 http://localhost:8000
 ```
 
-### Using the Application
+You'll see a landing page with two coaching modes:
 
-1. **Upload Video**: Click the upload area or drag & drop a video file (MP4, AVI, MOV, WEBM)
-2. **Analyze**: Click "Analyze Video" and wait 30-60 seconds (local CPU processing)
-3. **Review Results**: View your metrics and AI coaching feedback
-4. **Iterate**: Upload another video to track improvement
+1. **🎥 Presentation Coaching** - Video analysis for nonverbal communication
+2. **🎤 Interview Coaching** - Audio analysis for speech clarity
+
+### Using Presentation Coaching
+
+1. Click **"Start Video Analysis"** from the landing page
+2. **Upload Video**: Click the upload area or drag & drop a video file (MP4, AVI, MOV, WEBM)
+3. **Analyze**: Click "Analyze Video" and wait 30-60 seconds (local CPU processing)
+4. **Review Results**: View your eye contact, posture, and gesture metrics (0-100 scores)
+5. **Read Feedback**: Get AI-powered coaching suggestions
+6. **Iterate**: Upload another video to track improvement
+
+### Using Interview Coaching
+
+1. Click **"Start Interview Practice"** from the landing page
+2. **Record or Upload**:
+   - Click "Start Recording" to record your answer directly in the browser
+   - OR upload an audio file (MP3, WAV, WEBM, M4A)
+3. **Analyze**: Click "Get Feedback" and wait 10-30 seconds
+4. **Review Results**:
+   - Read your transcribed answer
+   - View feedback on clarity, grammar, phrasing, and filler words
+   - See an improved example sentence
+   - Listen to voice coaching (if ElevenLabs API key is configured)
+5. **Respond**: Answer the follow-up question to practice further
 
 ### Testing & Debugging
 
@@ -149,15 +246,16 @@ These scripts help validate MediaPipe is detecting face, pose, and hands correct
 
 ### API Usage
 
-You can also use the API directly:
+Both backends expose REST APIs for programmatic access.
+
+**Video Analysis API (Python - Port 8000):**
 
 ```bash
 curl -X POST http://localhost:8000/analyze \
   -F "file=@your_video.mp4"
 ```
 
-**Response:**
-
+Response:
 ```json
 {
   "metrics": {
@@ -170,36 +268,74 @@ curl -X POST http://localhost:8000/analyze \
 }
 ```
 
+**Audio Analysis API (Node.js - Port 3000):**
+
+```bash
+curl -X POST http://localhost:3000/api/transcribe \
+  -F "audio=@your_recording.mp3"
+```
+
+Response:
+```json
+{
+  "transcript": "So, um, I believe my biggest strength is...",
+  "feedback": {
+    "clarity": "Your answer is clear but could be more concise.",
+    "grammar": "Good grammar overall.",
+    "phrasing": "Try starting with confidence without 'So, um'",
+    "fillerWords": "Noticed: 'um' (1x), 'like' (2x). Try pausing instead.",
+    "exampleSentence": "I believe my biggest strength is problem-solving...",
+    "followUp": "Can you give a specific example?",
+    "reply": "Good start! Try removing filler words for more confidence."
+  },
+  "audio": "data:audio/mpeg;base64,..." // Optional voice feedback
+}
+```
+
 ## Project Structure
 
 ```
 clarity-coach/
-├── backend/
+├── backend-python/                      # Python backend (video coaching)
 │   ├── app/
 │   │   ├── main.py                      # FastAPI entry point
 │   │   ├── config.py                    # Configuration management
 │   │   ├── routes/
-│   │   │   └── analyze.py               # /analyze endpoint
+│   │   │   └── analyze.py               # POST /analyze endpoint
 │   │   ├── services/
 │   │   │   ├── modal_client_local.py    # Local MediaPipe processing
 │   │   │   ├── modal_client.py          # Modal GPU client (optional)
-│   │   │   └── llm_client.py            # OpenAI/Anthropic client
+│   │   │   └── llm_client.py            # OpenAI client
 │   │   └── models/
 │   │       └── schemas.py               # Pydantic models
 │   └── tests/
-├── modal_functions/
-│   ├── mediapipe_processor.py           # Modal GPU function (optional)
+├── backend-node/                        # Node.js backend (audio coaching)
+│   ├── server.js                        # Express entry point
+│   ├── routes/
+│   │   ├── transcribe.js                # POST /api/transcribe (Whisper)
+│   │   ├── analyze.js                   # POST /api/analyze (Claude)
+│   │   └── voice-feedback.js            # POST /api/voice-feedback (ElevenLabs)
+│   └── package.json
+├── modal_functions/                     # Optional GPU acceleration
+│   ├── mediapipe_processor.py           # Modal GPU function
 │   ├── utils.py                         # Metric calculations
 │   └── requirements.txt
-├── frontend/
-│   ├── index.html                       # Web interface
-│   ├── style.css                        # Styling
-│   └── app.js                           # Frontend logic
+├── frontend/                            # Unified web interface
+│   ├── index.html                       # Landing page
+│   ├── style.css                        # Landing page styles
+│   ├── presentation.html                # Video coaching UI
+│   ├── presentation-style.css           # Video page styles
+│   ├── presentation-app.js              # Video page logic
+│   ├── interview.html                   # Audio coaching UI
+│   ├── interview-style.css              # Audio page styles
+│   └── interview-app.js                 # Audio page logic
 ├── test_video_local.py                  # Local video testing script
 ├── debug_landmarks.py                   # Landmark detection debugger
-├── requirements.txt                     # Unified dependencies
+├── requirements.txt                     # Python dependencies
+├── .env.example                         # Environment template
 ├── .gitignore
 ├── CLAUDE.md                            # Project instructions
+├── MERGE_PLAN.md                        # Merge strategy documentation
 └── README.md
 ```
 
@@ -284,21 +420,57 @@ To modify coaching feedback style, edit:
 ### Production Considerations
 
 1. **Environment Variables**: Use secure secret management (not .env files)
-2. **Rate Limiting**: Add rate limiting to prevent abuse
-3. **Video Storage**: Currently videos are processed in-memory and not stored
-4. **CORS**: Update `cors_origins` in config for your production domain
-5. **HTTPS**: Use a reverse proxy (nginx, Caddy) with SSL certificates
-6. **Monitoring**: Add logging and error tracking (Sentry, etc.)
+2. **Dual Backend Coordination**:
+   - Both backends must be accessible from frontend
+   - Use reverse proxy (nginx) to route `/api/*` to Node.js (port 3000) and `/analyze` to Python (port 8000)
+3. **Rate Limiting**: Add rate limiting to prevent abuse on both backends
+4. **File Storage**: Currently files are processed in-memory and not stored
+5. **CORS**: Update `cors_origins` in config for your production domain
+6. **HTTPS**: Use a reverse proxy with SSL certificates
+7. **Monitoring**: Add logging and error tracking (Sentry, etc.)
+8. **API Keys**: Ensure all required keys (OpenAI, Anthropic) are configured
 
 ### Deploying to Cloud
 
-**Backend Options:**
+**Python Backend Options:**
 - Render, Railway, Fly.io (easiest)
 - AWS EC2, Google Cloud Run, Azure App Service
 - Heroku
 
+**Node.js Backend Options:**
+- Same platforms as Python (keep both backends on same host or use load balancer)
+- Ensure both services can communicate if needed
+
+**Frontend:**
+- Can be served by Python backend (FastAPI static files)
+- Or use separate static hosting (Vercel, Netlify, Cloudflare Pages)
+- Update API endpoints to point to production URLs
+
 **Modal Function:**
 Already deployed via `modal deploy` - automatically scales with usage.
+
+**Example Nginx Configuration:**
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:8000;
+    }
+
+    # Video analysis (Python)
+    location /analyze {
+        proxy_pass http://localhost:8000;
+    }
+
+    # Audio analysis (Node.js)
+    location /api/ {
+        proxy_pass http://localhost:3000;
+    }
+}
+```
 
 ## Troubleshooting
 
@@ -358,17 +530,20 @@ CORS_ORIGINS=["http://localhost:3000", "https://yourdomain.com"]
 ## Limitations & Future Work
 
 **Current Limitations:**
-- Only analyzes nonverbal communication (not speech content)
-- Requires visible face and body in video
-- Single-person videos only
-- Cultural bias in nonverbal norms (Western-centric)
+- **Video coaching**: Requires visible face and body, single-person videos only
+- **Audio coaching**: English language only (Whisper supports others but feedback is English-focused)
+- **Cultural bias**: Nonverbal communication norms are Western-centric
+- **No persistence**: No user accounts, history, or progress tracking
+- **Separate modes**: Video and audio analysis are independent (not combined)
 
 **Planned Features:**
-- Speech analysis (filler words, pace, volume)
-- Sentiment and tone analysis
-- Multi-language support
-- Historical tracking and progress reports
-- Custom coaching profiles for different contexts
+- **Unified Analysis**: Combine video + audio for complete communication assessment
+- **User Accounts**: Save history, track progress over time
+- **Multi-language**: Expand to support other languages
+- **Real-time Coaching**: Live feedback during presentations/practice
+- **Custom Profiles**: Different coaching styles for interviews vs. pitches vs. meetings
+- **Sentiment Analysis**: Detect nervousness, confidence, enthusiasm
+- **Collaborative Features**: Share feedback with mentors or coaches
 
 ## Contributing
 
@@ -383,11 +558,38 @@ Contributions welcome! Please:
 
 MIT License - see LICENSE file for details
 
+## Quick Start
+
+**For the impatient:**
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+cd backend-node && npm install && cd ..
+
+# 2. Configure .env with your API keys
+cp .env.example .env
+# Edit .env with your OPENAI_API_KEY and ANTHROPIC_API_KEY
+
+# 3. Start both backends (in separate terminals)
+cd backend-python && uvicorn app.main:app --reload --port 8000
+cd backend-node && node server.js
+
+# 4. Open browser
+open http://localhost:8000
+```
+
 ## Acknowledgments
 
+**Video/Presentation Coaching:**
 - Built with [MediaPipe](https://mediapipe.dev/) by Google
-- Powered by [Modal](https://modal.com) GPU infrastructure
-- LLM by [OpenAI](https://openai.com)
+- [OpenAI GPT-4o-mini](https://openai.com) for coaching feedback
+- Optional [Modal](https://modal.com) GPU infrastructure
+
+**Audio/Interview Coaching:**
+- [OpenAI Whisper](https://openai.com/research/whisper) for transcription
+- [Claude/Anthropic](https://anthropic.com) for interview analysis
+- [ElevenLabs](https://elevenlabs.io) for voice synthesis (optional)
 
 ## Support
 

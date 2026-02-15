@@ -23,6 +23,13 @@ wheels/
 .installed.cfg
 *.egg
 
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
 # Environment variables
 .env
 *.env
@@ -34,6 +41,7 @@ wheels/
 *.swp
 *.swo
 *~
+.cursor/
 
 # OS
 .DS_Store
@@ -54,3 +62,6 @@ htmlcov/
 *.webm
 uploads/
 videos/
+
+# Old backend directory (can be removed manually)
+backend/

@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clarity Coach - Complete Communication Analysis</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Presentation Coaching - Clarity Coach</title>
+    <link rel="stylesheet" href="/static/presentation-style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🎯 Clarity Coach</h1>
-            <p class="subtitle">Complete Communication Analysis</p>
-            <p class="description">
-                Upload one video and get comprehensive feedback on BOTH nonverbal and verbal communication
-            </p>
+            <a href="/" class="back-link">← Back to Home</a>
+            <h1>🎥 Presentation Coaching</h1>
+            <p class="subtitle">AI-Powered Nonverbal Communication Analysis</p>
         </header>
 
         <main>
@@ -21,8 +19,7 @@
             <section id="upload-section" class="card">
                 <h2>Upload Your Video</h2>
                 <p class="instruction">
-                    Upload a 30-90 second video of yourself presenting or answering an interview question.
-                    You'll receive analysis on eye contact, posture, gestures, speech clarity, grammar, and more!
+                    Record or upload a 30-60 second workplace video (self-intro or pitch) for nonverbal feedback.
                 </p>
 
                 <div class="upload-area" id="upload-area">
@@ -32,8 +29,8 @@
                     <p class="upload-text">
                         <strong>Click to upload</strong> or drag and drop
                     </p>
-                    <p class="upload-hint">MP4, MOV, WEBM (max 50MB, 90s)</p>
-                    <input type="file" id="video-input" accept="video/mp4,video/mov,video/webm,video/quicktime" hidden>
+                    <p class="upload-hint">MP4, AVI, MOV, WEBM (max 50MB, 90s)</p>
+                    <input type="file" id="video-input" accept="video/mp4,video/avi,video/mov,video/webm,video/quicktime" hidden>
                 </div>
 
                 <div id="file-info" class="file-info hidden">
@@ -46,18 +43,18 @@
             <!-- Loading Section -->
             <section id="loading-section" class="card hidden">
                 <div class="loading-spinner"></div>
-                <h3>Analyzing Your Communication...</h3>
+                <h3>Analyzing Your Video...</h3>
                 <p class="loading-text">
-                    Processing video and audio... This typically takes 40-90 seconds.
+                    Processing video with AI... This typically takes 15-40 seconds.
                 </p>
                 <div class="progress-steps">
                     <div class="step active">
                         <div class="step-circle">1</div>
-                        <div class="step-label">Processing Video</div>
+                        <div class="step-label">Uploading</div>
                     </div>
-                    <div class="step">
+                    <div class="step active">
                         <div class="step-circle">2</div>
-                        <div class="step-label">Analyzing Speech</div>
+                        <div class="step-label">Processing</div>
                     </div>
                     <div class="step">
                         <div class="step-circle">3</div>
@@ -68,11 +65,10 @@
 
             <!-- Results Section -->
             <section id="results-section" class="card hidden">
-                <h2>Your Complete Communication Analysis</h2>
+                <h2>Your Communication Analysis</h2>
 
-                <!-- Nonverbal Metrics -->
-                <div class="section-title">📊 Nonverbal Communication</div>
                 <div class="metrics-grid">
+                    <!-- Eye Contact -->
                     <div class="metric-card">
                         <div class="metric-header">
                             <span class="metric-icon">👁️</span>
@@ -84,6 +80,7 @@
                         </div>
                     </div>
 
+                    <!-- Posture -->
                     <div class="metric-card">
                         <div class="metric-header">
                             <span class="metric-icon">🧍</span>
@@ -95,6 +92,7 @@
                         </div>
                     </div>
 
+                    <!-- Gestures -->
                     <div class="metric-card">
                         <div class="metric-header">
                             <span class="metric-icon">👋</span>
@@ -107,62 +105,17 @@
                     </div>
                 </div>
 
-                <!-- Verbal Analysis -->
-                <div id="verbal-section" class="verbal-section">
-                    <div class="section-title">🗣️ Verbal Communication</div>
-
-                    <!-- Transcript -->
-                    <div class="transcript-box">
-                        <h3>Your Speech</h3>
-                        <div id="transcript-content" class="transcript-content"></div>
-                    </div>
-
-                    <!-- Verbal Feedback -->
-                    <div class="feedback-grid">
-                        <div class="feedback-card">
-                            <div class="feedback-header">
-                                <span class="feedback-icon">💡</span>
-                                <span class="feedback-label">Clarity</span>
-                            </div>
-                            <p id="clarity-feedback" class="feedback-text"></p>
-                        </div>
-
-                        <div class="feedback-card">
-                            <div class="feedback-header">
-                                <span class="feedback-icon">✍️</span>
-                                <span class="feedback-label">Grammar</span>
-                            </div>
-                            <p id="grammar-feedback" class="feedback-text"></p>
-                        </div>
-
-                        <div class="feedback-card">
-                            <div class="feedback-header">
-                                <span class="feedback-icon">🗣️</span>
-                                <span class="feedback-label">Phrasing</span>
-                            </div>
-                            <p id="phrasing-feedback" class="feedback-text"></p>
-                        </div>
-
-                        <div class="feedback-card">
-                            <div class="feedback-header">
-                                <span class="feedback-icon">⚠️</span>
-                                <span class="feedback-label">Filler Words</span>
-                            </div>
-                            <p id="filler-feedback" class="feedback-text"></p>
-                        </div>
-                    </div>
-
-                    <!-- Example Sentence -->
-                    <div class="example-box">
-                        <h3>✨ Improved Example</h3>
-                        <div id="example-sentence" class="example-content"></div>
+                <!-- Feedback -->
+                <div class="feedback-section">
+                    <h3>💡 Coaching Feedback</h3>
+                    <div id="feedback-content" class="feedback-content">
+                        <!-- Feedback will be inserted here -->
                     </div>
                 </div>
 
-                <!-- Combined Coaching Feedback -->
-                <div class="coaching-section">
-                    <h3>💬 Your Personal Coach Says:</h3>
-                    <div id="combined-feedback" class="coaching-content"></div>
+                <!-- Meta Info -->
+                <div class="meta-info">
+                    <p><strong>Frames Processed:</strong> <span id="frame-count">--</span></p>
                 </div>
 
                 <button id="analyze-another-btn" class="btn btn-secondary">Analyze Another Video</button>
@@ -177,10 +130,10 @@
         </main>
 
         <footer>
-            <p>Powered by MediaPipe, Whisper, Claude & OpenAI • <a href="/health" target="_blank">API Status</a></p>
+            <p>Built with MediaPipe Holistic & AI • <a href="/docs" target="_blank">API Docs</a></p>
         </footer>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/presentation-app.js"></script>
 </body>
 </html>

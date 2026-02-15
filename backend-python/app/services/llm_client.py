@@ -10,15 +10,15 @@ from ..config import settings
 class LLMClient:
     """Client for generating AI coaching feedback from metrics."""
 
-    def __init__(self):
+    def __init__(self, provider: str = None, model: str = None, api_key: str = None):
         """Initialize LLM client based on configured provider."""
-        self.provider = settings.llm_provider
-        self.model = settings.llm_model
+        self.provider = provider or settings.llm_provider
+        self.model = model or settings.llm_model
 
         if self.provider == "openai":
-            self.openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
+            self.openai_client = openai.AsyncOpenAI(api_key=api_key or settings.openai_api_key)
         elif self.provider == "anthropic":
-            self.anthropic_client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+            self.anthropic_client = anthropic.AsyncAnthropic(api_key=api_key or settings.anthropic_api_key)
 
     def _create_coaching_prompt(self, metrics: Dict[str, float]) -> str:
         """
@@ -154,6 +154,95 @@ Format your response as clear bullet points."""
             feedback_points.append("• **Gestures**: Try to use moderate hand gestures for emphasis.")
 
         return "\n\n".join(feedback_points)
+
+    async def generate_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None) -> str:
+        """
+        Generate combined feedback for both nonverbal and verbal communication.
+
+        Args:
+            nonverbal_metrics: Dictionary with nonverbal scores
+            verbal_feedback: Optional dictionary with verbal feedback
+
+        Returns:
+            Combined coaching feedback
+        """
+        eye_contact = nonverbal_metrics.get('eye_contact_score', 0)
+        posture = nonverbal_metrics.get('posture_score', 0)
+        gesture = nonverbal_metrics.get('gesture_score', 0)
+
+        prompt = f"""You are a professional communication coach analyzing a workplace video presentation.
+
+NONVERBAL COMMUNICATION:
+- Eye Contact: {eye_contact}/100 (camera engagement)
+- Posture: {posture}/100 (upright stance)
+- Gesture Activity: {gesture}/100 (hand movements)
+"""
+
+        if verbal_feedback:
+            transcript = verbal_feedback.get('transcript', 'N/A')
+            clarity = verbal_feedback.get('clarity', 'N/A')
+            grammar = verbal_feedback.get('grammar', 'N/A')
+            filler_words = verbal_feedback.get('fillerWords', 'N/A')
+
+            prompt += f"""
+VERBAL COMMUNICATION:
+- Transcript: "{transcript[:200]}{'...' if len(transcript) > 200 else ''}"
+- Clarity Assessment: {clarity}
+- Grammar: {grammar}
+- Filler Words: {filler_words}
+"""
+
+        prompt += """
+Provide a comprehensive coaching summary (5-7 bullet points) covering:
+1. Overall communication strengths
+2. Key areas for improvement (both nonverbal and verbal)
+3. Specific, actionable tips for immediate improvement
+4. One priority focus area for next practice session
+
+Keep feedback:
+- Constructive and encouraging
+- Specific with examples
+- Actionable
+- Culturally aware"""
+
+        try:
+            if self.provider == "openai":
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are an expert communication coach."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=800
+                )
+                return response.choices[0].message.content.strip()
+
+            elif self.provider == "anthropic":
+                response = await self.anthropic_client.messages.create(
+                    model=self.model,
+                    max_tokens=800,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.7
+                )
+                return response.content[0].text.strip()
+
+        except Exception as e:
+            print(f"Combined feedback generation failed: {str(e)}")
+            return self._generate_fallback_combined_feedback(nonverbal_metrics, verbal_feedback)
+
+    def _generate_fallback_combined_feedback(self, nonverbal_metrics: Dict[str, float], verbal_feedback: Dict = None) -> str:
+        """Fallback combined feedback if LLM fails."""
+        feedback_parts = [self._generate_fallback_feedback(nonverbal_metrics)]
+
+        if verbal_feedback:
+            feedback_parts.append("\n**VERBAL COMMUNICATION:**")
+            if verbal_feedback.get('clarity'):
+                feedback_parts.append(f"• Clarity: {verbal_feedback['clarity']}")
+            if verbal_feedback.get('fillerWords'):
+                feedback_parts.append(f"• Filler Words: {verbal_feedback['fillerWords']}")
+
+        return "\n".join(feedback_parts)
 
 
 # Global client instance
