@@ -160,6 +160,19 @@ function displayResults(data) {
 
     // Combined coaching feedback
     document.getElementById('combined-feedback').textContent = data.combined_feedback;
+
+    // Voice coaching (if available)
+    const voiceSection = document.getElementById('voice-section');
+    const voicePlayer = document.getElementById('voice-player');
+
+    if (data.voice_audio) {
+        // Convert base64 audio to playable source
+        const audioSrc = `data:audio/mpeg;base64,${data.voice_audio}`;
+        voicePlayer.src = audioSrc;
+        voiceSection.classList.remove('hidden');
+    } else {
+        voiceSection.classList.add('hidden');
+    }
 }
 
 // Update Metric Display

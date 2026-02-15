@@ -38,6 +38,7 @@ class CompleteAnalysisResponse(BaseModel):
     nonverbal: NonverbalMetrics
     verbal: VerbalFeedback | None
     combined_feedback: str
+    voice_audio: str | None  # Base64 audio of coaching feedback
     frame_count: int
     video_duration: float | None
     verbal_analysis_error: str | None
@@ -134,10 +135,32 @@ async def analyze_complete(file: UploadFile = File(...)):
         verbal_feedback=verbal_feedback.model_dump() if verbal_feedback else None
     )
 
+    # Step 5: Generate voice coaching (optional - graceful degradation if fails)
+    voice_audio = None
+    try:
+        # Create a concise spoken version of the coaching feedback
+        # Take first 2-3 sentences for voice synthesis (keep it brief)
+        spoken_text = ". ".join(combined_feedback.split(". ")[:3]) + "."
+
+        voice_url = "http://localhost:3000/api/voice-feedback"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            voice_response = await client.post(
+                voice_url,
+                json={"text": spoken_text}
+            )
+
+            if voice_response.status_code == 200:
+                voice_result = voice_response.json()
+                voice_audio = voice_result.get('audio')
+    except Exception as e:
+        # Voice synthesis is optional - don't fail the whole request
+        print(f"Voice synthesis failed (optional feature): {str(e)}")
+
     return CompleteAnalysisResponse(
         nonverbal=nonverbal_metrics,
         verbal=verbal_feedback,
         combined_feedback=combined_feedback,
+        voice_audio=voice_audio,
         frame_count=frame_count,
         video_duration=None,
         verbal_analysis_error=verbal_error
