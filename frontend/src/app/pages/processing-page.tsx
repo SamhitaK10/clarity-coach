@@ -71,6 +71,7 @@ export function ProcessingPage() {
       setAnalysisResults(analysisResponse);
 
       await new Promise(resolve => setTimeout(resolve, 800));
+      setCurrentStep(4); // Mark as fully complete
       setCompletedSteps([1, 2, 3, 4]);
 
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -89,10 +90,13 @@ export function ProcessingPage() {
     }
   };
 
-  // More accurate progress: include current step as 50% complete
-  const progress = currentStep < processingSteps.length
-    ? ((completedSteps.length + 0.5) / processingSteps.length) * 100
-    : (completedSteps.length / processingSteps.length) * 100;
+  // Calculate progress accurately, capped at 100%
+  const progress = Math.min(
+    100,
+    completedSteps.length >= processingSteps.length
+      ? 100
+      : ((completedSteps.length + 0.5) / processingSteps.length) * 100
+  );
 
   return (
     <div 
