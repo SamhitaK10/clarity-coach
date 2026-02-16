@@ -4,6 +4,8 @@ Express-based backend powering the conversational audio coaching system for **Cl
 
 This service captures spoken responses, performs speech transcription, evaluates communication clarity using large language models, and generates spoken coaching feedback to enable iterative, conversational practice.
 
+Devpost: https://devpost.com/software/clarity-coach-1oxkvl
+
 ---
 
 ## 🎯 System Overview
